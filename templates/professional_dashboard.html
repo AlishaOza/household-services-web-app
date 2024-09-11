@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Dashboard</title>
+</head>
+<body>
+    <h1>Your Service Requests</h1>
+    <ul>
+        {% for request in service_requests %}
+            <li>{{ request.service.name }} - {{ request.service_status }}
+                <form action="{{ url_for('update_request_status', request_id=request.id) }}" method="POST">
+                    <input type="hidden" name="action" value="complete">
+                    <button type="submit">Mark as Completed</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</body>
+</html>
