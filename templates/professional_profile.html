@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Complete Your Profile</title>
+</head>
+<body>
+    <h1>Complete Your Professional Profile</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.user_id.label }}<br>
+            {{ form.user_id }}<br>
+            {% if form.user_id.errors %}
+                <span>{{ form.user_id.errors[0] }}</span><br>
+            {% endif %}
+        </div>
+        <div>
+            {{ form.service_type.label }}<br>
+            {{ form.service_type }}<br>
+            {% if form.service_type.errors %}
+                <span>{{ form.service_type.errors[0] }}</span><br>
+            {% endif %}
+        </div>
+        <div>
+            {{ form.experience.label }}<br>
+            {{ form.experience }}<br>
+            {% if form.experience.errors %}
+                <span>{{ form.experience.errors[0] }}</span><br>
+            {% endif %}
+        </div>
+        <div>
+            {{ form.description.label }}<br>
+            {{ form.description }}<br>
+        </div>
+        <div>
+            {{ form.submit }}
+        </div>
+    </form>
+</body>
+</html>

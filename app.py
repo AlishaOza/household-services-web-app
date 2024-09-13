@@ -1,8 +1,8 @@
 from flask import Flask, render_template, redirect, url_for, request, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import RegisterForm, ServiceForm
-from models import db, User, Service, ServiceRequest, ProfessionalProfile
+from forms import ProfessionalProfileForm, RegisterForm, ServiceForm
+from models import db , User, Service, ProfessionalProfile, ServiceRequest    
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
@@ -47,14 +47,16 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        print(username)
         user = User.query.filter(User.username==username).filter(User.role.in_(['customer','professional'])).first()
         if user and check_password_hash(user.password, password):
-            print(user.role)
             session['user_id'] = user.id
             if user.role == 'customer':
                 return redirect(url_for('customer_dashboard'))
             elif user.role == 'professional':
+                # Check if the professional profile is incomplete
+                professionalProfile = ProfessionalProfile.query.filter_by(user_id = user.id).first()
+                if not professionalProfile:
+                    return redirect(url_for('professional_profile'))
                 return redirect(url_for('professional_dashboard'))
         flash('Invalid Credentials', 'danger')
     return render_template('login.html')        
@@ -184,6 +186,30 @@ def create_service_request():
         flash('Service request created successfully!', 'success')
         return redirect(url_for('customer_dashboard'))
     return redirect(url_for('login'))
+    
+@app.route('/professional/profile', methods=['GET', 'POST'])
+def professional_profile():
+    if not session.get('user_id'):
+        flash('Please log in to complete your profile.', 'danger')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    form = ProfessionalProfileForm()
+    form.user_id.data = user_id
+
+    if form.validate_on_submit():
+        new_professional_profile = ProfessionalProfile(
+                user_id = form.user_id.data,
+                service_type = form.service_type.data,
+                experience = form.experience.data,
+                description = form.description.data
+            )            
+        db.session.add(new_professional_profile)
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('professional_dashboard'))
+
+    return render_template('professional_profile.html', form=form)
 
 @app.route('/professional/dashboard')
 def professional_dashboard():

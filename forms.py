@@ -20,8 +20,9 @@ class ServiceForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class ProfessionalProfileForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired()])
+    user_id = StringField('User Id', validators=[DataRequired()])
     service_type = StringField('Service Type', validators=[DataRequired()])
     experience = IntegerField('Experience (in years)', validators=[DataRequired()])
     description = TextAreaField('Description')
     submit = SubmitField('Update Profile')
+
