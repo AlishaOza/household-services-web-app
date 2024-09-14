@@ -180,7 +180,8 @@ def create_service_request():
     if 'user_id' in session:
         service_id = request.form['service_id']
         customer_id = session['user_id']
-        service_request = ServiceRequest(service_id=service_id, customer_id=customer_id, service_status='requested')
+        professional_id = ProfessionalProfile.query.filter_by(service_type=service_id).first().user_id
+        service_request = ServiceRequest(service_id=service_id, customer_id=customer_id, professional_id= professional_id, service_status='requested')
         db.session.add(service_request)
         db.session.commit()
         flash('Service request created successfully!', 'success')
@@ -217,7 +218,11 @@ def professional_dashboard():
     if 'user_id' in session:
         professional_id = session['user_id']
         service_requests = ServiceRequest.query.filter_by(professional_id=professional_id).all()
-        return render_template('professional_dashboard.html', service_requests=service_requests)
+        serviceIdList = []    
+        for request in service_requests:
+            serviceIdList.append(request.service_id)
+        services = Service.query.filter(Service.id.in_(serviceIdList)).all()
+        return render_template('professional_dashboard.html', service_requests=service_requests, services=services)
     return redirect(url_for('login'))
 
 @app.route('/professional/update_request_status/<int:request_id>', methods=['POST'])
@@ -228,8 +233,10 @@ def update_request_status(request_id):
         
         if action == 'complete':
             service_request.service_status = 'completed'
+            service_request.date_of_completion = db.func.current_timestamp()
         elif action == 'reject':
             service_request.service_status = 'rejected'
+            service_request.date_of_completion = db.func.current_timestamp()
         
         db.session.commit()
         flash('Service request updated successfully!', 'success')

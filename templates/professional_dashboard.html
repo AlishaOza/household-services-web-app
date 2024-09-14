@@ -9,12 +9,16 @@
     <h1>Your Service Requests</h1>
     <ul>
         {% for request in service_requests %}
-            <li>{{ request.service.name }} - {{ request.service_status }}
-                <form action="{{ url_for('update_request_status', request_id=request.id) }}" method="POST">
-                    <input type="hidden" name="action" value="complete">
-                    <button type="submit">Mark as Completed</button>
-                </form>
-            </li>
+            {% for service in services %}
+                {% if service.id == request.service_id %}
+                    <li>{{ service.name }} - {{ request.service_status }}
+                        <form action="{{ url_for('update_request_status', request_id=request.id) }}" method="POST">
+                            <input type="hidden" name="action" value="complete">
+                            <button type="submit">Mark as Completed</button>
+                        </form>
+                    </li>
+                {% endif %}
+            {% endfor %}            
         {% endfor %}
     </ul>
     <a href="{{ url_for('logout') }}">Logout</a>
