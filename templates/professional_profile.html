@@ -9,10 +9,10 @@
     <form method="POST">
         {{ form.hidden_tag() }}
         <div>
-            {{ form.user_id.label }}<br>
-            {{ form.user_id }}<br>
-            {% if form.user_id.errors %}
-                <span>{{ form.user_id.errors[0] }}</span><br>
+            {{ form.user_name.label }}<br>
+            {{ form.user_name(class="form-control", readonly=True) }}<br>
+            {% if form.user_name.errors %}
+                <span>{{ form.user_name.errors[0] }}</span><br>
             {% endif %}
         </div>
         <div>
@@ -20,7 +20,7 @@
             {{ form.service_type }}<br>
             {% if form.service_type.errors %}
                 <span>{{ form.service_type.errors[0] }}</span><br>
-            {% endif %}
+            {% endif %}    
         </div>
         <div>
             {{ form.experience.label }}<br>

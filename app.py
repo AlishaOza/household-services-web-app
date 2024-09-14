@@ -192,10 +192,11 @@ def professional_profile():
     if not session.get('user_id'):
         flash('Please log in to complete your profile.', 'danger')
         return redirect(url_for('login'))
-
+    
     user_id = session['user_id']
     form = ProfessionalProfileForm()
     form.user_id.data = user_id
+    form.user_name.data = User.query.get(user_id).username
 
     if form.validate_on_submit():
         new_professional_profile = ProfessionalProfile(

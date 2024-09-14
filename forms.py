@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, StringField, PasswordField, SelectField, SubmitField, TextAreaField
+from wtforms import IntegerField, Label, StringField, PasswordField, SelectField, SubmitField, TextAreaField
 from wtforms.validators import InputRequired, DataRequired , Length
+from models import Service, User
 
 class RegisterForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=4, max=15)])
@@ -20,9 +21,14 @@ class ServiceForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class ProfessionalProfileForm(FlaskForm):
-    user_id = StringField('User Id', validators=[DataRequired()])
-    service_type = StringField('Service Type', validators=[DataRequired()])
+    user_id = StringField('User Id',validators=[DataRequired()])
+    user_name = StringField('User Name',validators=[DataRequired()])
+    service_type = SelectField('Service Type', choices=[], validators=[DataRequired()])
     experience = IntegerField('Experience (in years)', validators=[DataRequired()])
     description = TextAreaField('Description')
     submit = SubmitField('Update Profile')
 
+    def __init__(self, *args, **kwargs):
+        super(ProfessionalProfileForm, self).__init__(*args, **kwargs)
+        # Populate the choices dynamically from the database
+        self.service_type.choices = [(service.id, service.name) for service in Service.query.all()]
