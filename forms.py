@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, Label, StringField, PasswordField, SelectField, SubmitField, TextAreaField
+from wtforms import FileField, IntegerField, Label, StringField, PasswordField, SelectField, SubmitField, TextAreaField
 from wtforms.validators import InputRequired, DataRequired , Length
+from flask_wtf.file import FileRequired, FileAllowed
 from models import Service, User
 
 class RegisterForm(FlaskForm):
@@ -23,12 +24,24 @@ class ServiceForm(FlaskForm):
 class ProfessionalProfileForm(FlaskForm):
     user_id = StringField('User Id',validators=[DataRequired()])
     user_name = StringField('User Name',validators=[DataRequired()])
+    full_name = StringField('Full Name',validators=[DataRequired()])
     service_type = SelectField('Service Type', choices=[], validators=[DataRequired()])
+    file = FileField('Upload File', validators=[FileRequired(),FileAllowed(['jpg', 'png', 'pdf', 'jpeg', 'gif'], 'Images and PDFs only!')])
     experience = IntegerField('Experience (in years)', validators=[DataRequired()])
-    description = TextAreaField('Description')
+    address = TextAreaField('Address', validators=[DataRequired()])
+    pin_code = IntegerField('Pin Code', validators=[DataRequired()])
+    
     submit = SubmitField('Update Profile')
 
     def __init__(self, *args, **kwargs):
         super(ProfessionalProfileForm, self).__init__(*args, **kwargs)
         # Populate the choices dynamically from the database
         self.service_type.choices = [(service.id, service.name) for service in Service.query.all()]
+
+class CustomerProfileForm(FlaskForm):
+    user_id = StringField('User Id',validators=[DataRequired()])
+    user_name = StringField('User Name(e-mail)',validators=[DataRequired()])
+    full_name = StringField('Full Name',validators=[DataRequired()])
+    address = TextAreaField('Address', validators=[DataRequired()])
+    pin_code = IntegerField('Pin Code', validators=[DataRequired()])
+    submit = SubmitField('Update Customer Profile')

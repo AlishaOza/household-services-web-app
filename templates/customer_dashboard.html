@@ -1,29 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Dashboard</title>
-</head>
-<body>
-    <h1>Available Services</h1>
-    <ul>
+{% extends "base.html" %}
+{% block title %}Customer Dashboard{% endblock %}
+
+{% block content %}
+<h2>Available Services</h2>
+<form method="GET" action="/customer/search">
+    <div class="form-group">
+        <input type="text" class="form-control" placeholder="Search by service name or location" name="search">
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+<table class="table table-striped mt-4">
+    <thead>
+        <tr>
+            <th>Service Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
         {% for service in services %}
-            <li>{{ service.name }} - {{ service.price }} USD</li>
+        <tr>
+            <td>{{ service.name }}</td>
+            <td>{{ service.description }}</td>
+            <td>{{ service.price }}</td>
+            <td>
+                <a href="/customer/request_service/{{ service.id }}" class="btn btn-primary">Request</a>
+            </td>
+        </tr>
         {% endfor %}
-    </ul>
+    </tbody>
+</table>
 
-    <h2>Create a Service Request</h2>
-    <form action="{{ url_for('create_service_request') }}" method="POST">
-        <label for="service">Select Service:</label>
-        <select name="service_id">
-            {% for service in services %}
-                <option value="{{ service.id }}">{{ service.name }}</option>
-            {% endfor %}
-        </select><br><br>
-
-        <input type="submit" value="Create Request">
-    </form>
-    <a href="{{ url_for('logout') }}">Logout</a>
-</body>
-</html>
+<h2>Service History</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Service Name</th>
+            <th>Professional</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in service_history %}
+        <tr>
+            <td>{{ request.service_name }}</td>
+            <td>{{ request.professional_name }}</td>
+            <td>{{ request.status }}</td>
+            <td>
+                <a href="/customer/close_service/{{ request.id }}" class="btn btn-success">Close</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

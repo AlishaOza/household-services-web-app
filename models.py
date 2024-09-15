@@ -45,10 +45,26 @@ class ProfessionalProfile(db.Model):
     __tablename__ = 'professional_profiles'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    full_name = db.Column(db.String(100), nullable=False)
     service_type = db.Column(db.String(100), nullable=False)
-    experience = db.Column(db.String(100))
-    description = db.Column(db.String(200))
+    experience = db.Column(db.String(100), nullable=False)
+    filename = db.Column(db.String(120), nullable=False)
+    uploaded_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    address = db.Column(db.String(200),nullable=False)
+    pin_code = db.Column(db.String(6), nullable=False)
     reviews = db.Column(db.Float, default=0)
 
     def __repr__(self):
         return f'<ProfessionalProfile {self.user_id} - {self.service_type}>'
+    
+class CustomerProfile(db.Model):
+    __tablename__ = 'customer_profiles'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    full_name = db.Column(db.String(100), nullable=False)
+    address = db.Column(db.String(200),nullable=False)
+    pin_code = db.Column(db.String(6), nullable=False)
+
+    def __repr__(self):
+        return f'<CustomerProfile {self.full_name} - {self.pin_code}>'
+    

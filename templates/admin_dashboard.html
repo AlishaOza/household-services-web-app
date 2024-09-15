@@ -1,20 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Admin Dashboard</title>
-    </head>
-    <body>
-        <h1>Welcome to Admin Dashboard</h1>
-        <a href="{{ url_for('manage_users') }}">Manage Users</a><br>
-        <a href="{{ url_for('manage_services') }}">Manage Services</a><br>
-        <a href="{{ url_for('admin_logout') }}">Logout</a>
-    </body>
-    </html>
-    
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h3>Manage Services</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Base Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for service in services %}
+                <tr>
+                    <td>{{ service.id }}</td>
+                    <td>{{ service.name }}</td>
+                    <td>{{ service.price }}</td>
+                    <td>
+                        <a href="/admin/edit_service/{{ service.id }}" class="btn btn-warning">Edit</a>
+                        <a href="/admin/delete_service/{{ service.id }}" class="btn btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p><a href="{{ url_for('create_services') }}"  >Create Service</a></p>
+        <h3>Manage Professionals</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for professional in professional_profile %}
+                <tr>
+                    <td>{{ professional.user_id }}</td>
+                    <td>{{ professional.full_name }}</td>
+                    <td>
+                        <a href="/admin/approve_professional/{{ professional.id }}" class="btn btn-success">Approve</a>
+                        <a href="/admin/block_professional/{{ professional.id }}" class="btn btn-danger">Block</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
