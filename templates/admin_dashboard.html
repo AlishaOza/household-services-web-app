@@ -28,7 +28,9 @@
                 {% endfor %}
             </tbody>
         </table>
-        <p><a href="{{ url_for('create_services') }}"  >Create Service</a></p>
+        <div class="d-flex justify-content-end">
+            <a href="{{ url_for('create_services') }}"  class="btn btn-primary">Create Service</a>
+        </div>    
         <h3>Manage Professionals</h3>
         <table class="table table-striped">
             <thead>
