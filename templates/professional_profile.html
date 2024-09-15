@@ -22,7 +22,7 @@
                     </div>
                 {% endif %}
             {% endwith %}
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
                     {{ form.user_name.label }}
