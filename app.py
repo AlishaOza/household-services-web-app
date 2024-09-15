@@ -111,14 +111,30 @@ def admin_profile():
         flash("Admin! You can't make changes to your profile", 'danger')
     return render_template('admin_profile.html')
 
-
 # Admin Dashboard
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if 'admin_user_id' in session:
         services = Service.query.all()
         professional_profile = ProfessionalProfile.query.all()
-        customer_profile = CustomerProfile.query.all()
+        service_requests = ServiceRequest.query.all()
+        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests)
+    return redirect(url_for('admin_login'))
+
+@app.route('/admin/search')
+def admin_search():
+    if 'admin_user_id' in session:
+        services = Service.query.all()
+        professional_profile = ProfessionalProfile.query.all()
+        service_requests = ServiceRequest.query.all()
+        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests)
+    return redirect(url_for('admin_login'))
+
+@app.route('/admin/summary')
+def admin_summary():
+    if 'admin_user_id' in session:
+        services = Service.query.all()
+        professional_profile = ProfessionalProfile.query.all()
         service_requests = ServiceRequest.query.all()
         return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests)
     return redirect(url_for('admin_login'))
@@ -250,6 +266,21 @@ def customer_dashboard():
         return render_template('customer_dashboard.html', services=services)
     return redirect(url_for('login'))
 
+@app.route('/customer/search')
+def customer_search():
+    if 'user_id' in session:
+        services = Service.query.all()
+        return render_template('customer_dashboard.html', services=services)
+    return redirect(url_for('login'))
+
+@app.route('/customer/summary')
+def customer_summary():
+    if 'user_id' in session:
+        services = Service.query.all()
+        return render_template('customer_dashboard.html', services=services)
+    return redirect(url_for('login'))
+
+
 @app.route('/customer/create_service_request', methods=['POST'])
 def create_service_request():
     if 'user_id' in session:
@@ -314,6 +345,31 @@ def professional_dashboard():
         services = Service.query.filter(Service.id.in_(serviceIdList)).all()
         return render_template('professional_dashboard.html', service_requests=service_requests, services=services)
     return redirect(url_for('login'))
+
+@app.route('/professional/search')
+def professional_search():
+    if 'user_id' in session:
+        professional_id = session['user_id']
+        service_requests = ServiceRequest.query.filter_by(professional_id=professional_id).all()
+        serviceIdList = []    
+        for request in service_requests:
+            serviceIdList.append(request.service_id)
+        services = Service.query.filter(Service.id.in_(serviceIdList)).all()
+        return render_template('professional_dashboard.html', service_requests=service_requests, services=services)
+    return redirect(url_for('login'))
+
+@app.route('/professional/summary')
+def professional_summary():
+    if 'user_id' in session:
+        professional_id = session['user_id']
+        service_requests = ServiceRequest.query.filter_by(professional_id=professional_id).all()
+        serviceIdList = []    
+        for request in service_requests:
+            serviceIdList.append(request.service_id)
+        services = Service.query.filter(Service.id.in_(serviceIdList)).all()
+        return render_template('professional_dashboard.html', service_requests=service_requests, services=services)
+    return redirect(url_for('login'))
+
 
 @app.route('/professional/update_request_status/<int:request_id>', methods=['POST'])
 def update_request_status(request_id):
