@@ -1,59 +1,35 @@
 {% extends "base.html" %}
-{% block title %}Customer Dashboard{% endblock %}
+{% block title %}Customer Summary{% endblock %}
 
 {% block content %}
-<h2>Available Services</h2>
-<form method="GET" action="/customer/search">
-    <div class="form-group">
-        <input type="text" class="form-control" placeholder="Search by service name or location" name="search">
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Summary</h3>
+            <canvas id="myChart" width="400" height="200"></canvas>
+        </div>
     </div>
-    <button type="submit" class="btn btn-primary">Search</button>
-</form>
-
-<table class="table table-striped mt-4">
-    <thead>
-        <tr>
-            <th>Service Name</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for service in services %}
-        <tr>
-            <td>{{ service.name }}</td>
-            <td>{{ service.description }}</td>
-            <td>{{ service.price }}</td>
-            <td>
-                <a href="/customer/request_service/{{ service.id }}" class="btn btn-primary">Request</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<h2>Service History</h2>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Service Name</th>
-            <th>Professional</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for request in service_history %}
-        <tr>
-            <td>{{ request.service_name }}</td>
-            <td>{{ request.professional_name }}</td>
-            <td>{{ request.status }}</td>
-            <td>
-                <a href="/customer/close_service/{{ request.id }}" class="btn btn-success">Close</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar', // Change this to 'line', 'pie', etc. based on the chart type
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'My First Dataset',
+                    data: [12, 19, 3, 5, 2, 3, 7],
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
 {% endblock %}

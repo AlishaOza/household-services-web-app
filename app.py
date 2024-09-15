@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, redirect, url_for, request, flash, session
+from flask import Flask, jsonify, render_template, redirect, url_for, request, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import CustomerProfileForm, ProfessionalProfileForm, RegisterForm, ServiceForm
@@ -136,7 +136,7 @@ def admin_summary():
         services = Service.query.all()
         professional_profile = ProfessionalProfile.query.all()
         service_requests = ServiceRequest.query.all()
-        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests)
+        return render_template('admin_summary.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests)
     return redirect(url_for('admin_login'))
 
 # Manage Users Route
@@ -277,7 +277,7 @@ def customer_search():
 def customer_summary():
     if 'user_id' in session:
         services = Service.query.all()
-        return render_template('customer_dashboard.html', services=services)
+        return render_template('customer_summary.html', services=services)
     return redirect(url_for('login'))
 
 
@@ -367,7 +367,7 @@ def professional_summary():
         for request in service_requests:
             serviceIdList.append(request.service_id)
         services = Service.query.filter(Service.id.in_(serviceIdList)).all()
-        return render_template('professional_dashboard.html', service_requests=service_requests, services=services)
+        return render_template('professional_summary.html', service_requests=service_requests, services=services)
     return redirect(url_for('login'))
 
 
@@ -388,6 +388,20 @@ def update_request_status(request_id):
         flash('Service request updated successfully!', 'success')
         return redirect(url_for('professional_dashboard'))
     return redirect(url_for('login'))
+
+@app.route('/data1')
+def data1():
+    # Example data for Chart 1
+    labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July']
+    values = [12, 19, 3, 5, 2, 3, 7]
+    return jsonify(labels=labels, values=values)
+
+@app.route('/data2')
+def data2():
+    # Example data for Chart 2
+    labels = ['August', 'September', 'October', 'November', 'December']
+    values = [10, 20, 15, 25, 30]
+    return jsonify(labels=labels, values=values)
 
 if __name__ == '__main__':
     app.run(debug=True)
