@@ -5,6 +5,9 @@
 <div class="row">
     <div class="col-md-12">
         <h3>Manage Services</h3>
+        <div class="d-flex justify-content-end">
+            <a href="{{ url_for('create_services') }}"  class="btn btn-outline-success">Create Service</a>
+        </div>
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -28,9 +31,6 @@
                 {% endfor %}
             </tbody>
         </table>
-        <div class="d-flex justify-content-end">
-            <a href="{{ url_for('create_services') }}"  class="btn btn-primary">Create Service</a>
-        </div>    
         <h3>Manage Professionals</h3>
         <table class="table table-striped">
             <thead>
@@ -39,19 +39,21 @@
                     <th>Name</th>
                     <th>Service</th>
                     <th>Experience</th>
+                    <th>Doc</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for professional in professional_profile %}
                 <tr>
-                    <td>{{ professional.user_id }}</td>
+                    <td>{{ professional.id }}</td>
                     <td>{{ professional.full_name }}</td>
-                    <td>{{ professional.service_type }}</td>
+                    <td>{{ service_type[professional.user_id].name }}</td>
                     <td>{{ professional.experience }}</td>
+                    <td><a href="/download/{{ professional.filename }}"  >{{ professional.filename }}</td></a>{{ professional.filename }}</td>
                     <td>
-                        <a href="/admin/approve_professional/{{ professional.id }}" class="btn btn-success">Approve</a>
-                        <a href="/admin/block_professional/{{ professional.id }}" class="btn btn-danger">Block</a>
+                        <a href="/admin/manage_user/{{ professional.user_id }}/approve/{{user_dict[professional.user_id].approve}}" class="btn {{ 'btn-secondary' if user_dict[professional.user_id].approve else 'btn-success' }}">{{ 'Reject' if user_dict[professional.user_id].approve else 'Approve' }}</a>
+                        <a href="/admin/manage_user/{{ professional.user_id }}/blocked/{{user_dict[professional.user_id].blocked}}" class="btn {{ 'btn-success' if user_dict[professional.user_id].blocked else 'btn-danger' }}">{{ 'Unblock' if user_dict[professional.user_id].blocked else 'Block' }}</a>
                     </td>
                 </tr>
                 {% endfor %}

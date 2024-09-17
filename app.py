@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, render_template, redirect, url_for, request, flash, session
+from flask import Flask, jsonify, render_template, redirect, url_for, request, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import CustomerProfileForm, ProfessionalProfileForm, RegisterForm, ServiceForm
@@ -33,6 +33,15 @@ def create_tables():
         db.create_all()
         first_request = False
 
+# Serve downloadable files from a 'files' directory
+@app.route('/download/<string:filename>')
+def download_file(filename):
+    # Set the directory where your files are located
+    file_directory = os.path.join(app.root_path, 'uploads')
+    
+    # Serve the file from the directory as an attachment
+    return send_from_directory(file_directory, filename, as_attachment=True)
+
 # Home Route
 @app.route('/')
 def index():
@@ -48,7 +57,7 @@ def register():
             return redirect(url_for('register'))
 
         hashed_password = generate_password_hash(form.password.data, method='pbkdf2:sha256')
-        new_user = User(username=form.username.data, password=hashed_password, role=form.role.data)
+        new_user = User(username=form.username.data, password=hashed_password, role=form.role.data, approve=False, blocked=True)
         db.session.add(new_user)
         db.session.commit()
         flash('Registration successful!', 'success')
@@ -115,10 +124,15 @@ def admin_profile():
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if 'admin_user_id' in session:
+        user_dict={}
+        service_type={}
         services = Service.query.all()
         professional_profile = ProfessionalProfile.query.all()
+        for profile in professional_profile:
+            user_dict[profile.user_id] = User.query.filter_by(id=profile.user_id).first()
+            service_type[profile.user_id] = Service.query.filter_by(id=profile.service_type).first()
         service_requests = ServiceRequest.query.all()
-        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests)
+        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests,user_dict=user_dict,service_type=service_type)
     return redirect(url_for('admin_login'))
 
 @app.route('/admin/search')
@@ -139,34 +153,35 @@ def admin_summary():
         return render_template('admin_summary.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests)
     return redirect(url_for('admin_login'))
 
-# Manage Users Route
-@app.route('/manage_users', methods=['GET', 'POST'])
-def manage_users():
+# Manage User Route
+@app.route('/admin/manage_user/<int:user_id>/<string:field>/<string:value>', methods=['GET', 'POST'])
+def manage_user(user_id,field,value):
     if not session.get('admin_user_id'):
         return redirect(url_for('admin_login'))
-    
-    users = User.query.all()  # Assuming User model is already defined
+    print(user_id,field,value)
+    user = User.query.filter_by(id=user_id).first()
+    print(user)
+    # Approve/Reject & Block/Unblock professional
+    if user and  field == 'approve':
+        if value == 'False':
+            user.approve = True
+            flash('Professional approved successfully', 'success')
+        elif value == 'True':
+            user.approve = False
+            flash('Professional rejected successfully', 'danger')
 
-    # Approve or Block/Unblock Users based on form inputs
-    if request.method == 'POST':
-        user_id = request.form.get('user_id')
-        action = request.form.get('action')
-        user = User.query.get(user_id)
-
-        if user and action == 'approve':
-            user.approved = True
-            flash('User approved successfully', 'success')
-        elif user and action == 'block':
+    if user and field == 'blocked' :
+        if value == 'False':
             user.blocked = True
             flash('User blocked successfully', 'danger')
-        elif user and action == 'unblock':
+        elif value == 'True':
             user.blocked = False
             flash('User unblocked successfully', 'success')
 
-        # Save changes to the database
-        db.session.commit()
+    # Save changes to the database
+    db.session.commit()
 
-    return render_template('manage_users.html', users=users)
+    return redirect(url_for('admin_dashboard'))
 
 # Manage Services Route (CRUD operations)
 @app.route('/admin/services/create_services', methods=['GET', 'POST'])
