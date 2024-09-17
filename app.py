@@ -169,10 +169,15 @@ def manage_users():
     return render_template('manage_users.html', users=users)
 
 # Manage Services Route (CRUD operations)
-@app.route('/admin/create_services', methods=['GET', 'POST'])
+@app.route('/admin/services/create_services', methods=['GET', 'POST'])
 def create_services():
+    if not session.get('admin_user_id'):
+        flash('Please log in to complete your profile.', 'danger')
+        return redirect(url_for('admin_login'))
+    
     form = ServiceForm()
-    # Create or Update Service
+    
+    # Create Service
     if form.validate_on_submit():
         new_service = Service(
             name=form.name.data,
@@ -183,48 +188,37 @@ def create_services():
         flash('Service created successfully', 'success')
         db.session.commit()
         return redirect(url_for('admin_dashboard'))
-    else:
-        return render_template('create_services.html', form=form)
+    return render_template('create_services.html', form=form)
 
-# Manage Services Route (CRUD operations)
-@app.route('/manage_services', methods=['GET', 'POST'])
-def manage_services():
+# Update Services Route (CRUD operations)
+@app.route('/admin/services/update_service/<int:service_id>', methods=['GET', 'POST'])
+def update_services(service_id):
+    if not session.get('admin_user_id'):
+        flash('Please log in to complete your profile.', 'danger')
+        return redirect(url_for('admin_login'))
+    service = Service.query.get_or_404(service_id)
+    form = ServiceForm(obj=service)
     
-    form = ServiceForm()
-
-    # Create or Update Service
+    # Update Service
     if form.validate_on_submit():
-        service_id = request.form.get('service_id')
-        if service_id:
-            service = Service.query.get(service_id)
-            service.name = form.name.data
-            service.price = form.price.data
-            service.description = form.description.data
-            flash('Service updated successfully', 'success')
-        else:
-            new_service = Service(
-                name=form.name.data,
-                price=form.price.data,
-                description=form.description.data
-            )
-            db.session.add(new_service)
-            flash('Service created successfully', 'success')
-        
+        service.id = service_id
+        service.name = form.name.data
+        service.price = form.price.data
+        service.description = form.description.data
+        flash('Service updated successfully', 'success')
         db.session.commit()
-        return redirect(url_for('manage_services'))
+        return redirect(url_for('admin_dashboard'))
+    return render_template('create_services.html', form=form,service=service,editing=True)
 
-    # Handle delete operation
-    if request.method == 'POST' and request.form.get('delete_service_id'):
-        service_to_delete = Service.query.get(request.form.get('delete_service_id'))
-        if service_to_delete:
-            db.session.delete(service_to_delete)
-            db.session.commit()
-            flash('Service deleted successfully', 'success')
-        return redirect(url_for('manage_services'))
-
-    services = Service.query.all()
-    return render_template('manage_services.html', form=form, services=services)
-
+# Handle delete operation
+@app.route('/admin/services/delete_service/<int:service_id>', methods=['GET', 'POST'])
+def delete_services(service_id):
+    service_to_delete = Service.query.get(service_id)
+    if service_to_delete:
+        db.session.delete(service_to_delete)
+        db.session.commit()
+        flash('Service deleted successfully', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 # Logout route for admin
 @app.route('/admin/logout')

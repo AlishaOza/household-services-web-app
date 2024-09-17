@@ -21,8 +21,8 @@
                     <td>{{ service.name }}</td>
                     <td>{{ service.price }}</td>
                     <td>
-                        <a href="/admin/edit_service/{{ service.id }}" class="btn btn-warning">Edit</a>
-                        <a href="/admin/delete_service/{{ service.id }}" class="btn btn-danger">Delete</a>
+                        <a href="/admin/services/update_service/{{ service.id }}" class="btn btn-warning">Edit</a>
+                        <a href="/admin/services/delete_service/{{ service.id }}" class="btn btn-danger">Delete</a>
                     </td>
                 </tr>
                 {% endfor %}

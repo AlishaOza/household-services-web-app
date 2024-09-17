@@ -10,24 +10,24 @@
 <body>
 <div class="row">
     <div class="col-md-4 offset-md-4">
-        <h3>New Service</h3>      
-        <form method="POST">
+        <h3>{{ 'Edit Service' if editing else 'New Service' }}</h3>      
+        <form method="POST" action="{{ url_for('update_services', service_id=service.id) if editing else url_for('create_services') }}">
             {{ form.hidden_tag() }}
             <div class="form-group">
                 {{ form.name.label }}
-                {{ form.name }}
+                {{ form.name(value=service.name if editing else nothing) }}
             </div>
             <div class="form-group">
                 {{ form.description.label }}
-                {{ form.description }}
+                {{ form.description(value=service.description if editing else None) }}
             </div>
             <div class="form-group">
                 {{ form.price.label }}
-                {{ form.price }}
+                {{ form.price(value=service.price if editing else None) }}
             </div>
             <div class="form-group text-center">
                 {{ form.submit(class="btn btn-primary btn-sm btn-spacing") }}
-                <a href="{{ url_for('create_services') }}" class="btn btn-secondary btn-sm ">Cancel</a>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm ">Cancel</a>
             </div>
         </form>                    
     </div>

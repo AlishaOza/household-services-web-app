@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import FileField, IntegerField, Label, StringField, PasswordField, SelectField, SubmitField, TextAreaField
+from wtforms import DecimalField, FileField, IntegerField, Label, StringField, PasswordField, SelectField, SubmitField, TextAreaField
 from wtforms.validators import InputRequired, DataRequired , Length
 from flask_wtf.file import FileRequired, FileAllowed
 from models import Service, User
@@ -17,7 +17,7 @@ class LoginForm(FlaskForm):
 
 class ServiceForm(FlaskForm):
     name = StringField('Service Name', validators=[DataRequired()])
-    price = IntegerField('Price', validators=[DataRequired()])
+    price = DecimalField('Price', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
