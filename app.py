@@ -125,14 +125,17 @@ def admin_profile():
 def admin_dashboard():
     if 'admin_user_id' in session:
         user_dict={}
+        prof_dict ={}
         service_type={}
         services = Service.query.all()
         professional_profile = ProfessionalProfile.query.all()
         for profile in professional_profile:
             user_dict[profile.user_id] = User.query.filter_by(id=profile.user_id).first()
             service_type[profile.user_id] = Service.query.filter_by(id=profile.service_type).first()
+            prof_dict[profile.user_id] = profile
         service_requests = ServiceRequest.query.all()
-        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests,user_dict=user_dict,service_type=service_type)
+
+        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests,user_dict=user_dict,service_type=service_type,prof_dict=prof_dict)
     return redirect(url_for('admin_login'))
 
 @app.route('/admin/search')
@@ -278,7 +281,15 @@ def customer_dashboard():
             services = Service.query.filter_by(service_type=request.args.get("service_type")).all()
         else:
             services = []
-        return render_template('customer_dashboard.html', services=services)
+        service_requests = ServiceRequest.query.filter_by(customer_id=session['user_id']).all()
+        professional_profile = ProfessionalProfile.query.all()
+        service_dict = {}  # Define service_dict here
+        prof_dict = {}  # Define user_dict here
+        for professional in professional_profile:
+            prof_dict[professional.user_id] = professional
+        for service in Service.query.all():
+            service_dict[service.id] = service
+        return render_template('customer_dashboard.html', services=services, service_requests=service_requests,prof_dict=prof_dict,service_dict=service_dict)
     return redirect(url_for('login'))
 
 @app.route('/customer/search')
@@ -296,13 +307,27 @@ def customer_summary():
     return redirect(url_for('login'))
 
 
-@app.route('/customer/create_service_request', methods=['POST'])
-def create_service_request():
+@app.route('/customer/create_service_request/<int:service_id>', methods=['GET', 'POST'])
+def create_service_request(service_id):
     if 'user_id' in session:
-        service_id = request.form['service_id']
         customer_id = session['user_id']
-        professional_id = ProfessionalProfile.query.filter_by(service_type=service_id).first().user_id
-        service_request = ServiceRequest(service_id=service_id, customer_id=customer_id, professional_id= professional_id, service_status='requested')
+        professional = ProfessionalProfile.query.filter_by(service_type=service_id).first()
+        if professional == None:
+            flash('No professional offering this service yet! Please choose another service.', 'danger')
+            return redirect(url_for('customer_dashboard'))
+        else:
+            user = User.query.filter_by(id=professional.user_id).first()
+            if user.approve == False:
+                flash('Professional offering this service is still not approved! Please choose another service.', 'danger')
+                return redirect(url_for('customer_dashboard'))
+            if user.blocked:
+                flash('Professional offering this service is blocked! Please choose another service.', 'danger')
+                return redirect(url_for('customer_dashboard'))
+        professional_service_request = ServiceRequest.query.filter_by(professional_id=professional.user_id, service_id=service_id).first()
+        if professional_service_request and professional_service_request.service_status == 'requested':
+            flash('Service request already exists! Please wait for the professional to respond.', 'danger')
+            return redirect(url_for('customer_dashboard'))
+        service_request = ServiceRequest(service_id=service_id, customer_id=customer_id, professional_id= professional.user_id, service_status='requested')
         db.session.add(service_request)
         db.session.commit()
         flash('Service request created successfully!', 'success')
@@ -358,7 +383,13 @@ def professional_dashboard():
         for request in service_requests:
             serviceIdList.append(request.service_id)
         services = Service.query.filter(Service.id.in_(serviceIdList)).all()
-        return render_template('professional_dashboard.html', service_requests=service_requests, services=services)
+        cust_dict = {}
+        service_dict = {}
+        for service in Service.query.all():
+            service_dict[service.id] = service
+        for cust in CustomerProfile.query.all():
+            cust_dict[cust.user_id] = cust
+        return render_template('professional_dashboard.html', service_requests=service_requests, services=services,cust_dict=cust_dict,service_dict=service_dict)
     return redirect(url_for('login'))
 
 @app.route('/professional/search')

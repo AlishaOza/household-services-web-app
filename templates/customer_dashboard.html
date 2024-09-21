@@ -88,7 +88,7 @@
             <td>{{ service.description }}</td>
             <td>{{ service.price }}</td>
             <td>
-                <a href="/customer/request_service/{{ service.id }}" class="btn btn-primary">Request</a>
+                <a href="/customer/create_service_request/{{ service.id }}" class="btn btn-primary">Request</a>
             </td>
         </tr>
         {% endfor %}
@@ -106,11 +106,11 @@
         </tr>
     </thead>
     <tbody>
-        {% for request in service_history %}
+        {% for service_request in service_requests %}
         <tr>
-            <td>{{ request.service_name }}</td>
-            <td>{{ request.professional_name }}</td>
-            <td>{{ request.status }}</td>
+            <td>{{ service_dict[service_request.service_id].name }}</td>
+            <td>{{ prof_dict[service_request.professional_id].full_name }}</td>
+            <td>{{ service_request.service_status }}</td>
             <td>
                 <a href="/customer/close_service/{{ request.id }}" class="btn btn-success">Close</a>
             </td>

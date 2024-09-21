@@ -13,11 +13,11 @@
         </tr>
     </thead>
     <tbody>
-        {% for request in today_services %}
+        {% for service_request in service_requests %}
         <tr>
-            <td>{{ request.customer_name }}</td>
-            <td>{{ request.service_name }}</td>
-            <td>{{ request.status }}</td>
+            <td>{{ cust_dict[service_request.customer_id].full_name }}</td>
+            <td>{{ service_dict[service_request.service_id].name }}</td>
+            <td>{{ service_request.service_status }}</td>
             <td>
                 <a href="/professional/accept/{{ request.id }}" class="btn btn-success">Accept</a>
                 <a href="/professional/reject/{{ request.id }}" class="btn btn-danger">Reject</a>
