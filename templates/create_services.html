@@ -14,6 +14,10 @@
         <form method="POST" action="{{ url_for('update_services', service_id=service.id) if editing else url_for('create_services') }}">
             {{ form.hidden_tag() }}
             <div class="form-group">
+                {{ form.service_type.label }}
+                {{ form.service_type(value=service.service_type if editing else None) }}
+            </div>
+            <div class="form-group">
                 {{ form.name.label }}
                 {{ form.name(value=service.name if editing else nothing) }}
             </div>

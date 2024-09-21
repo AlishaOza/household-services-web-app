@@ -2,20 +2,76 @@
 {% block title %}Customer Dashboard{% endblock %}
 
 {% block content %}
-<nav>
-    <a href="One">Services</a>
-    <a href="Two">Best Sale Packages</a>
-    <a href="Three">Summary</a>
-    <a href="Four">Logout</a>
-</nav>
-<h2>Available Services</h2>
-<form method="GET" action="/customer/search">
-    <div class="form-group">
-        <input type="text" class="form-control" placeholder="Search by service name or location" name="search">
+<div id="serviceCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#serviceCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
+        <button type="button" data-bs-target="#serviceCarousel" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#serviceCarousel" data-bs-slide-to="2"></button>
+        <button type="button" data-bs-target="#serviceCarousel" data-bs-slide-to="3"></button>
+        <button type="button" data-bs-target="#serviceCarousel" data-bs-slide-to="4"></button>
     </div>
-    <button type="submit" class="btn btn-primary">Search</button>
-</form>
-
+    <div class="carousel-inner">
+        <!-- Cleaning Services Slide -->
+        <div class="carousel-item active">
+            <img src="{{ url_for('static', filename='images/cleaning.jpg') }}" class="d-block w-100" alt="Cleaning Services">
+            <div class="carousel-caption d-none d-md-block">
+                <a href="{{ url_for('customer_dashboard', service_type='cleaning') }}" class="btn">
+                <h5>Cleaning Services</h5>
+                <p>Keep your home or office spotless with our professional cleaning services.</p>
+                </a>
+            </div>
+        </div>
+        <!-- Plumbing Services Slide -->
+        <div class="carousel-item">
+            <img src="{{ url_for('static', filename='images/plumber.jpg') }}" class="d-block w-100" alt="Plumbing Services">
+            <div class="carousel-caption d-none d-md-block">
+                <a href="{{ url_for('customer_dashboard', service_type='plumbing') }}" class="btn">
+                    <h5>Plumbing Services</h5>
+                    <p>Fix leaks and plumbing issues with our experienced plumbers.</p>
+                </a>
+            </div>
+        </div>
+        <!-- Electrical Services Slide -->
+        <div class="carousel-item">
+            <img src="{{ url_for('static', filename='images/electrical.jpg') }}" class="d-block w-100" alt="Electrical Services">
+            <div class="carousel-caption d-none d-md-block">    
+                <a href="{{ url_for('customer_dashboard', service_type='electrical') }}" class="btn">
+                    <h5>Electrical Services</h5>
+                    <p>Get reliable electrical services for your home or office needs.</p>
+                </a>
+            </div>
+        </div>
+        <!-- Painting Services Slide -->
+        <div class="carousel-item">
+            <img src="{{ url_for('static', filename='images/painting.jpg') }}" class="d-block w-100" alt="Painting Services">
+            <div class="carousel-caption d-none d-md-block">
+                <a href="{{ url_for('customer_dashboard', service_type='painting') }}" class="btn">
+                    <h5>Painting Services</h5>
+                    <p>Beautify your space with our expert painting services.</p>
+                </a>
+            </div>
+        </div>
+        <!-- Hair Cut Services Slide -->
+        <div class="carousel-item">
+            <img src="{{ url_for('static', filename='images/HairCut.jpg') }}" class="d-block w-100" alt="Haircut at Home Services">
+            <div class="carousel-caption d-none d-md-block">
+                <a href="{{ url_for('customer_dashboard', service_type='haircut') }}" class="btn">
+                    <h5>Haircut at Home</h5>
+                    <p>Get a professional haircut at the comfort of your home.</p>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- Carousel Controls -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#serviceCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#serviceCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
 <table class="table table-striped mt-4">
     <thead>
         <tr>
