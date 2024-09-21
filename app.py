@@ -195,6 +195,7 @@ def create_services():
     # Create Service
     if form.validate_on_submit():
         new_service = Service(
+            service_type=form.service_type.data,
             name=form.name.data,
             price=form.price.data,
             description=form.description.data
@@ -217,6 +218,7 @@ def update_services(service_id):
     # Update Service
     if form.validate_on_submit():
         service.id = service_id
+        service.service_type = form.service_type.data
         service.name = form.name.data
         service.price = form.price.data
         service.description = form.description.data
@@ -267,11 +269,15 @@ def customer_profile():
 
     return render_template('customer_profile.html', form=form)
 
+
 # `Customer` Dashboard
-@app.route('/customer/dashboard')
+@app.route('/customer/dashboard', methods=['GET', 'POST'])
 def customer_dashboard():
     if 'user_id' in session:
-        services = Service.query.all()
+        if request.args.get("service_type"):
+            services = Service.query.filter_by(service_type=request.args.get("service_type")).all()
+        else:
+            services = []
         return render_template('customer_dashboard.html', services=services)
     return redirect(url_for('login'))
 

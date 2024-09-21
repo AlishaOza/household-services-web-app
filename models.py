@@ -22,7 +22,7 @@ class Service(db.Model):
     name = db.Column(db.String(100), nullable=False)
     price = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(200))
-    time_required = db.Column(db.String(50))
+    service_type = db.Column(db.String(50))
 
     def __repr__(self):
         return f'<Service {self.name}>'

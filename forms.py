@@ -16,6 +16,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 class ServiceForm(FlaskForm):
+    service_type = SelectField('Service Type', choices=[('haircut', 'Hair Cut'), ('cleaning', 'Cleaning Services'), ('electrical', 'Electrical Services'),('painting', 'Painting Services'),('plumbing', 'Plumbing Services')])
     name = StringField('Service Name', validators=[DataRequired()])
     price = DecimalField('Price', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[DataRequired()])

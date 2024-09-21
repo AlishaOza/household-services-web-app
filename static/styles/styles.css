@@ -55,3 +55,32 @@ h3{
     margin-bottom: 20px; /* Space below the heading */
     text-transform: uppercase; /* Optional: Make the text uppercase */
 }
+.carousel-item img {
+    height: 300px;
+    object-fit: cover;
+}
+/* General styling for text in the carousel */
+.carousel-caption {
+    background-color: transparent; /* Ensures no background color */
+    padding: 10px;
+}
+.carousel-caption h5, .carousel-caption p, .carousel-caption a {
+    color: #fff; /* Normal text color */
+}
+/* Style for text selection */
+::selection {
+    background-color: transparent; /* No background when selected */
+    color: inherit; /* Keep text color */
+}
+
+/* Optional: Specific styling for selected text in carousel */
+.carousel-caption ::selection {
+    background-color: transparent; /* No color when selected */
+    color: #fff; /* Keep white text */
+}
+
+
+
+
+
+
