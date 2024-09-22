@@ -263,22 +263,32 @@ def customer_profile():
         return redirect(url_for('login'))
     
     user_id = session['user_id']
-    form = CustomerProfileForm()
+    customer = CustomerProfile.query.filter_by(user_id=user_id).first()
+    form = CustomerProfileForm(obj=customer)
     form.user_id.data = user_id
     form.user_name.data = User.query.get(user_id).username
-
+    
     if form.validate_on_submit():
-        new_customer_profile = CustomerProfile(
+        if customer:
+            print(customer.full_name)
+            customer.full_name = form.full_name.data
+            print(form.full_name.data)
+            customer.address = form.address.data
+            customer.pin_code = form.pin_code.data
+        else:
+            print("new customer")
+            new_customer_profile = CustomerProfile(
                 user_id = form.user_id.data,
                 full_name = form.full_name.data,
                 address = form.address.data,
                 pin_code = form.pin_code.data
             )            
-        db.session.add(new_customer_profile)
+            db.session.add(new_customer_profile)
         db.session.commit()
         flash('Customer Profile updated successfully!', 'success')
         return redirect(url_for('customer_dashboard'))
-
+    else:
+        print(form.errors)
     return render_template('customer_profile.html', form=form)
 
 
@@ -386,37 +396,57 @@ def professional_profile():
         return redirect(url_for('login'))
     
     user_id = session['user_id']
-    form = ProfessionalProfileForm()
+    professional = ProfessionalProfile.query.filter_by(user_id=user_id).first()
+    form = ProfessionalProfileForm(obj=professional)
     form.user_id.data = user_id
     form.user_name.data = User.query.get(user_id).username
 
     if form.validate_on_submit():
-        # Handle file upload
-        file = form.file.data
-        if file and allowed_file(file.filename):
-            # Secure the filename and save it to the UPLOAD_FOLDER
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-
-            # Save file metadata and other form data to the database
-            
-            new_professional_profile = ProfessionalProfile(
-                user_id = form.user_id.data,
-                full_name = form.full_name.data,
-                filename = filename,
-                service_type = form.service_type.data,
-                experience = form.experience.data,
-                address = form.address.data,
-                pin_code = form.pin_code.data
-            )            
-            db.session.add(new_professional_profile)
+        if professional:
+            professional.full_name = form.full_name.data
+            professional.service_type = form.service_type.data
+            professional.experience = form.experience.data
+            professional.address = form.address.data
+            professional.pin_code = form.pin_code.data
+            file = form.file.data
+            if file and allowed_file(file.filename):
+                # Secure the filename and save it to the UPLOAD_FOLDER
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                professional.filename = file.filename
+                professional.uploaded_at = db.func.current_timestamp() 
+            else:
+                flash('Invalid file format! Please upload only images and PDFs.', 'danger')
+                return redirect(url_for('professional_profile',form=form))
             db.session.commit()
             flash('Profile updated successfully!', 'success')
-            return redirect(url_for('professional_dashboard'))
         else:
-            flash('Invalid file format! Please upload only images and PDFs.', 'danger')
-            print("in else block")
-            return redirect(url_for('professional_profile'))
+            # Handle file upload
+            file = form.file.data
+            if file and allowed_file(file.filename):
+                # Secure the filename and save it to the UPLOAD_FOLDER
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+                # Save file metadata and other form data to the database
+                
+                new_professional_profile = ProfessionalProfile(
+                    user_id = form.user_id.data,
+                    full_name = form.full_name.data,
+                    filename = filename,
+                    service_type = form.service_type.data,
+                    experience = form.experience.data,
+                    address = form.address.data,
+                    pin_code = form.pin_code.data
+                )            
+                db.session.add(new_professional_profile)
+                db.session.commit()
+                flash('Profile updated successfully!', 'success')
+                return redirect(url_for('professional_dashboard'))
+            else:
+                flash('Invalid file format! Please upload only images and PDFs.', 'danger')
+                return redirect(url_for('professional_profile'))
+        return redirect(url_for('professional_dashboard'))    
     return render_template('professional_profile.html', form=form)
 
 @app.route('/professional/dashboard')
