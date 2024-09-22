@@ -170,9 +170,7 @@ def admin_summary():
 def manage_user(user_id,field,value):
     if not session.get('admin_user_id'):
         return redirect(url_for('admin_login'))
-    print(user_id,field,value)
     user = User.query.filter_by(id=user_id).first()
-    print(user)
     # Approve/Reject & Block/Unblock professional
     if user and  field == 'approve':
         if value == 'False':
@@ -270,13 +268,10 @@ def customer_profile():
     
     if form.validate_on_submit():
         if customer:
-            print(customer.full_name)
             customer.full_name = form.full_name.data
-            print(form.full_name.data)
             customer.address = form.address.data
             customer.pin_code = form.pin_code.data
         else:
-            print("new customer")
             new_customer_profile = CustomerProfile(
                 user_id = form.user_id.data,
                 full_name = form.full_name.data,
@@ -287,8 +282,6 @@ def customer_profile():
         db.session.commit()
         flash('Customer Profile updated successfully!', 'success')
         return redirect(url_for('customer_dashboard'))
-    else:
-        print(form.errors)
     return render_template('customer_profile.html', form=form)
 
 
