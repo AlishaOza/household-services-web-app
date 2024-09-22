@@ -112,7 +112,11 @@
             <td>{{ prof_dict[service_request.professional_id].full_name }}</td>
             <td>{{ service_request.service_status }}</td>
             <td>
-                <a href="/customer/close_service/{{ request.id }}" class="btn btn-success">Close</a>
+                {% if service_request.service_status != 'completed' %}
+                    <a href="/customer/close_service_request/{{ service_request.id }}" class="btn btn-success">Close</a>
+                {% else %}
+                    Closed
+                {% endif %} 
             </td>
         </tr>
         {% endfor %}

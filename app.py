@@ -3,7 +3,7 @@ from flask import Flask, jsonify, render_template, redirect, url_for, request, f
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import CustomerProfileForm, ProfessionalProfileForm, RegisterForm, ServiceForm
+from forms import CustomerProfileForm, ProfessionalProfileForm, RegisterForm, ServiceForm, ServiceRemarksForm
 from models import CustomerProfile, db , User, Service, ProfessionalProfile, ServiceRequest
 from werkzeug.utils import secure_filename    
 
@@ -353,7 +353,32 @@ def create_service_request(service_id):
         flash('Service request created successfully!', 'success')
         return redirect(url_for('customer_dashboard'))
     return redirect(url_for('login'))
-    
+
+@app.route('/customer/close_service_request/<int:request_id>', methods=['GET', 'POST'])
+def close_service_request(request_id):
+    if not session.get('user_id'):
+        flash('Please log in to close this request.', 'danger')
+        return redirect(url_for('login'))
+    service_request = ServiceRequest.query.get_or_404(request_id)
+    professional = ProfessionalProfile.query.filter_by(user_id=service_request.professional_id).first()
+    service = Service.query.filter_by(id=service_request.service_id).first()
+    form = ServiceRemarksForm()
+    form.request_id.data = request_id
+    form.service_name.data = service.name
+    form.service_description.data = service.description
+    form.full_name.data = professional.full_name
+            
+    # Give remarks for the service request
+    if form.validate_on_submit():
+        service_request.service_status = 'completed'
+        service_request.date_of_completion = db.func.current_timestamp()
+        service_request.remarks = form.remarks.data
+        professional.reviews = (professional.reviews + form.rating.data)/2
+        flash('Service request closed successfully', 'success')
+        db.session.commit()
+        return redirect(url_for('customer_dashboard'))
+    return render_template('service_remarks.html',form=form)
+
 @app.route('/professional/profile', methods=['GET', 'POST'])
 def professional_profile():
     if not session.get('user_id'):

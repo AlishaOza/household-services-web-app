@@ -44,8 +44,8 @@
             <td>{{ cust_dict[service_request_closed.customer_id].full_name }}</td>
             <td>{{ service_dict[service_request_closed.service_id].name }}</td>
             <td>{{ service_request_closed.service_status }}</td>
-            <td>{{ service_request_closed.date_of_completion if exists else "" }}</td>
-            <td>{{ service_request_closed.remarks if exists else "" }}</td>
+            <td>{{ service_request_closed.date_of_completion if service_request_closed.date_of_completion else "" }}</td>
+            <td>{{ service_request_closed.remarks if service_request_closed.date_of_completion else "" }}</td>
         </tr>
         {% endfor %}
     </tbody>
