@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import DecimalField, FileField, IntegerField, Label, StringField, PasswordField, SelectField, SubmitField, TextAreaField
-from wtforms.validators import InputRequired, DataRequired , Length
+from wtforms import DecimalField, FileField, FloatField, IntegerField, Label, StringField, PasswordField, SelectField, SubmitField, TextAreaField
+from wtforms.validators import InputRequired, DataRequired, Length, NumberRange
 from flask_wtf.file import FileRequired, FileAllowed
 from models import Service, User
 
@@ -46,3 +46,12 @@ class CustomerProfileForm(FlaskForm):
     address = TextAreaField('Address', validators=[DataRequired()])
     pin_code = IntegerField('Pin Code', validators=[DataRequired()])
     submit = SubmitField('Update Customer Profile')
+
+class ServiceRemarksForm(FlaskForm):
+    request_id = StringField('Request Id',validators=[DataRequired()])
+    service_name = StringField('Service Name',validators=[DataRequired()])
+    service_description = StringField('Service Description',validators=[DataRequired()])
+    full_name = StringField('User Name',validators=[DataRequired()])
+    rating = FloatField('Rating', validators=[NumberRange(min=0, max=5, message="Rating must be between 0 and 5.")])
+    remarks = TextAreaField('Remarks', validators=[DataRequired()])
+    submit = SubmitField('Submit Remarks')
