@@ -5,6 +5,9 @@
 <div class="row">
     <div class="col-md-12">
         <h3>Manage Services</h3>
+        <div class="d-flex justify-content-end">
+            <a href="{{ url_for('create_services') }}"  class="btn btn-outline-success">Create Service</a>
+        </div>
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -21,16 +24,13 @@
                     <td>{{ service.name }}</td>
                     <td>{{ service.price }}</td>
                     <td>
-                        <a href="/admin/edit_service/{{ service.id }}" class="btn btn-warning">Edit</a>
-                        <a href="/admin/delete_service/{{ service.id }}" class="btn btn-danger">Delete</a>
+                        <a href="/admin/services/update_service/{{ service.id }}" class="btn btn-warning">Edit</a>
+                        <a href="/admin/services/delete_service/{{ service.id }}" class="btn btn-danger">Delete</a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <div class="d-flex justify-content-end">
-            <a href="{{ url_for('create_services') }}"  class="btn btn-primary">Create Service</a>
-        </div>    
         <h3>Manage Professionals</h3>
         <table class="table table-striped">
             <thead>
@@ -39,19 +39,23 @@
                     <th>Name</th>
                     <th>Service</th>
                     <th>Experience</th>
+                    <th>Reviews</th>
+                    <th>Doc</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for professional in professional_profile %}
                 <tr>
-                    <td>{{ professional.user_id }}</td>
+                    <td>{{ professional.id }}</td>
                     <td>{{ professional.full_name }}</td>
-                    <td>{{ professional.service_type }}</td>
+                    <td>{{ service_type[professional.user_id].name }}</td>
                     <td>{{ professional.experience }}</td>
+                    <td>{{ professional.reviews }}</td>
+                    <td><a href="/download/{{ professional.filename }}"  >{{ professional.filename }}</a></td>
                     <td>
-                        <a href="/admin/approve_professional/{{ professional.id }}" class="btn btn-success">Approve</a>
-                        <a href="/admin/block_professional/{{ professional.id }}" class="btn btn-danger">Block</a>
+                        <a href="/admin/manage_user/{{ professional.user_id }}/approve/{{user_dict[professional.user_id].approve}}" class="btn {{ 'btn-secondary' if user_dict[professional.user_id].approve else 'btn-success' }}">{{ 'Reject' if user_dict[professional.user_id].approve else 'Approve' }}</a>
+                        <a href="/admin/manage_user/{{ professional.user_id }}/blocked/{{user_dict[professional.user_id].blocked}}" class="btn {{ 'btn-success' if user_dict[professional.user_id].blocked else 'btn-danger' }}">{{ 'Unblock' if user_dict[professional.user_id].blocked else 'Block' }}</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -65,15 +69,17 @@
                     <th>Assigned Professional</th>
                     <th>Requested Date</th>
                     <th>Status</th>
+                    <th>Customer Remarks</th>
                 </tr>
             </thead>
             <tbody>
                 {% for service_request in service_requests%}
                 <tr>
                     <td>{{ service_request.id }}</td>
-                    <td>{{ service_request.professional_id}}</td>
+                    <td>{{ prof_dict[service_request.professional_id].full_name}}</td>
                     <td>{{ service_request.date_of_request}}</td>
                     <td>{{ service_request.service_status}}</td>
+                    <td>{{ service_request.remarks if exists else ""}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

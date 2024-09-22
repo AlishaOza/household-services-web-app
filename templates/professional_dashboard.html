@@ -19,31 +19,33 @@
             <td>{{ service_dict[service_request.service_id].name }}</td>
             <td>{{ service_request.service_status }}</td>
             <td>
-                <a href="/professional/accept/{{ request.id }}" class="btn btn-success">Accept</a>
-                <a href="/professional/reject/{{ request.id }}" class="btn btn-danger">Reject</a>
+                <a href="/professional/update_request_status/accept/{{ service_request.id }}" class="btn btn-success">Accept</a>
+                <a href="/professional/update_request_status/reject/{{ service_request.id }}" class="btn btn-danger">Reject</a>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 
-<h2>Closed Services</h2>
+<h2>Rejected/Accepted/Closed Services</h2>
 <table class="table table-striped">
     <thead>
         <tr>
             <th>Customer Name</th>
             <th>Service</th>
+            <th>Status</th>
             <th>Completion Date</th>
-            <th>Rating</th>
+            <th>Remarks</th>
         </tr>
     </thead>
     <tbody>
-        {% for closed_service in closed_services %}
+        {% for service_request_closed in service_requests_closed %}
         <tr>
-            <td>{{ closed_service.customer_name }}</td>
-            <td>{{ closed_service.service_name }}</td>
-            <td>{{ closed_service.completion_date }}</td>
-            <td>{{ closed_service.rating }}</td>
+            <td>{{ cust_dict[service_request_closed.customer_id].full_name }}</td>
+            <td>{{ service_dict[service_request_closed.service_id].name }}</td>
+            <td>{{ service_request_closed.service_status }}</td>
+            <td>{{ service_request_closed.date_of_completion if exists else "" }}</td>
+            <td>{{ service_request_closed.remarks if exists else "" }}</td>
         </tr>
         {% endfor %}
     </tbody>

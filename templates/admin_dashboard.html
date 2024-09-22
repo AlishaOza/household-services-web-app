@@ -39,6 +39,7 @@
                     <th>Name</th>
                     <th>Service</th>
                     <th>Experience</th>
+                    <th>Reviews</th>
                     <th>Doc</th>
                     <th>Action</th>
                 </tr>
@@ -50,7 +51,8 @@
                     <td>{{ professional.full_name }}</td>
                     <td>{{ service_type[professional.user_id].name }}</td>
                     <td>{{ professional.experience }}</td>
-                    <td><a href="/download/{{ professional.filename }}"  >{{ professional.filename }}</td></a>{{ professional.filename }}</td>
+                    <td>{{ professional.reviews }}</td>
+                    <td><a href="/download/{{ professional.filename }}"  >{{ professional.filename }}</a></td>
                     <td>
                         <a href="/admin/manage_user/{{ professional.user_id }}/approve/{{user_dict[professional.user_id].approve}}" class="btn {{ 'btn-secondary' if user_dict[professional.user_id].approve else 'btn-success' }}">{{ 'Reject' if user_dict[professional.user_id].approve else 'Approve' }}</a>
                         <a href="/admin/manage_user/{{ professional.user_id }}/blocked/{{user_dict[professional.user_id].blocked}}" class="btn {{ 'btn-success' if user_dict[professional.user_id].blocked else 'btn-danger' }}">{{ 'Unblock' if user_dict[professional.user_id].blocked else 'Block' }}</a>
@@ -67,6 +69,7 @@
                     <th>Assigned Professional</th>
                     <th>Requested Date</th>
                     <th>Status</th>
+                    <th>Customer Remarks</th>
                 </tr>
             </thead>
             <tbody>
@@ -76,6 +79,7 @@
                     <td>{{ prof_dict[service_request.professional_id].full_name}}</td>
                     <td>{{ service_request.date_of_request}}</td>
                     <td>{{ service_request.service_status}}</td>
+                    <td>{{ service_request.remarks if exists else ""}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

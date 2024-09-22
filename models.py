@@ -35,8 +35,9 @@ class ServiceRequest(db.Model):
     customer_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     professional_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     date_of_request = db.Column(db.DateTime, default=db.func.current_timestamp())
+    date_of_accept_reject = db.Column(db.DateTime, nullable=True)
     date_of_completion = db.Column(db.DateTime, nullable=True)
-    service_status = db.Column(db.String(20), default='requested')  # requested, assigned, closed
+    service_status = db.Column(db.String(20))  # requested, accepted, rejected , completed
     remarks = db.Column(db.String(200))
 
     def __repr__(self):

@@ -1,6 +1,7 @@
 import os
 from flask import Flask, jsonify, render_template, redirect, url_for, request, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import desc
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import CustomerProfileForm, ProfessionalProfileForm, RegisterForm, ServiceForm
 from models import CustomerProfile, db , User, Service, ProfessionalProfile, ServiceRequest
@@ -141,10 +142,18 @@ def admin_dashboard():
 @app.route('/admin/search')
 def admin_search():
     if 'admin_user_id' in session:
+        user_dict={}
+        prof_dict ={}
+        service_type={}
         services = Service.query.all()
         professional_profile = ProfessionalProfile.query.all()
+        for profile in professional_profile:
+            user_dict[profile.user_id] = User.query.filter_by(id=profile.user_id).first()
+            service_type[profile.user_id] = Service.query.filter_by(id=profile.service_type).first()
+            prof_dict[profile.user_id] = profile
         service_requests = ServiceRequest.query.all()
-        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests)
+
+        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests,user_dict=user_dict,service_type=service_type,prof_dict=prof_dict)
     return redirect(url_for('admin_login'))
 
 @app.route('/admin/summary')
@@ -295,8 +304,19 @@ def customer_dashboard():
 @app.route('/customer/search')
 def customer_search():
     if 'user_id' in session:
-        services = Service.query.all()
-        return render_template('customer_dashboard.html', services=services)
+        if request.args.get("service_type"):
+            services = Service.query.filter_by(service_type=request.args.get("service_type")).all()
+        else:
+            services = []
+        service_requests = ServiceRequest.query.filter_by(customer_id=session['user_id']).all()
+        professional_profile = ProfessionalProfile.query.all()
+        service_dict = {}  # Define service_dict here
+        prof_dict = {}  # Define user_dict here
+        for professional in professional_profile:
+            prof_dict[professional.user_id] = professional
+        for service in Service.query.all():
+            service_dict[service.id] = service
+        return render_template('customer_dashboard.html', services=services, service_requests=service_requests,prof_dict=prof_dict,service_dict=service_dict)
     return redirect(url_for('login'))
 
 @app.route('/customer/summary')
@@ -323,9 +343,9 @@ def create_service_request(service_id):
             if user.blocked:
                 flash('Professional offering this service is blocked! Please choose another service.', 'danger')
                 return redirect(url_for('customer_dashboard'))
-        professional_service_request = ServiceRequest.query.filter_by(professional_id=professional.user_id, service_id=service_id).first()
-        if professional_service_request and professional_service_request.service_status == 'requested':
-            flash('Service request already exists! Please wait for the professional to respond.', 'danger')
+        professional_service_request = ServiceRequest.query.filter_by(professional_id=professional.user_id, service_id=service_id).order_by(desc(ServiceRequest.date_of_request)).first()
+        if professional_service_request and (professional_service_request.service_status == 'requested' or professional_service_request.service_status == 'accepted'):
+            flash('Service request already exists! Please wait for the professional to respond or choose another service.', 'danger')
             return redirect(url_for('customer_dashboard'))
         service_request = ServiceRequest(service_id=service_id, customer_id=customer_id, professional_id= professional.user_id, service_status='requested')
         db.session.add(service_request)
@@ -378,7 +398,8 @@ def professional_profile():
 def professional_dashboard():
     if 'user_id' in session:
         professional_id = session['user_id']
-        service_requests = ServiceRequest.query.filter_by(professional_id=professional_id).all()
+        service_requests = ServiceRequest.query.filter_by(professional_id=professional_id,service_status='requested').all()
+        service_requests_closed = ServiceRequest.query.filter(ServiceRequest.professional_id==professional_id,ServiceRequest.service_status != 'requested').all()
         serviceIdList = []    
         for request in service_requests:
             serviceIdList.append(request.service_id)
@@ -389,19 +410,26 @@ def professional_dashboard():
             service_dict[service.id] = service
         for cust in CustomerProfile.query.all():
             cust_dict[cust.user_id] = cust
-        return render_template('professional_dashboard.html', service_requests=service_requests, services=services,cust_dict=cust_dict,service_dict=service_dict)
+        return render_template('professional_dashboard.html', service_requests=service_requests, services=services,cust_dict=cust_dict,service_dict=service_dict,service_requests_closed=service_requests_closed)
     return redirect(url_for('login'))
 
 @app.route('/professional/search')
 def professional_search():
     if 'user_id' in session:
         professional_id = session['user_id']
-        service_requests = ServiceRequest.query.filter_by(professional_id=professional_id).all()
+        service_requests = ServiceRequest.query.filter_by(professional_id=professional_id,service_status='requested').all()
+        service_requests_closed = ServiceRequest.query.filter(ServiceRequest.professional_id==professional_id,ServiceRequest.service_status != 'requested').all()
         serviceIdList = []    
         for request in service_requests:
             serviceIdList.append(request.service_id)
         services = Service.query.filter(Service.id.in_(serviceIdList)).all()
-        return render_template('professional_dashboard.html', service_requests=service_requests, services=services)
+        cust_dict = {}
+        service_dict = {}
+        for service in Service.query.all():
+            service_dict[service.id] = service
+        for cust in CustomerProfile.query.all():
+            cust_dict[cust.user_id] = cust
+        return render_template('professional_dashboard.html', service_requests=service_requests, services=services,cust_dict=cust_dict,service_dict=service_dict,service_requests_closed=service_requests_closed)
     return redirect(url_for('login'))
 
 @app.route('/professional/summary')
@@ -417,19 +445,16 @@ def professional_summary():
     return redirect(url_for('login'))
 
 
-@app.route('/professional/update_request_status/<int:request_id>', methods=['POST'])
-def update_request_status(request_id):
+@app.route('/professional/update_request_status/<string:status>/<int:request_id>')
+def update_request_status(status,request_id):
     if 'user_id' in session:
         service_request = ServiceRequest.query.get_or_404(request_id)
-        action = request.form['action']
-        
-        if action == 'complete':
-            service_request.service_status = 'completed'
-            service_request.date_of_completion = db.func.current_timestamp()
-        elif action == 'reject':
+        if status == 'accept':
+            service_request.service_status = 'accepted'
+            service_request.date_of_accept_reject = db.func.current_timestamp()
+        elif status == 'reject':
             service_request.service_status = 'rejected'
-            service_request.date_of_completion = db.func.current_timestamp()
-        
+            service_request.date_of_accept_reject = db.func.current_timestamp()
         db.session.commit()
         flash('Service request updated successfully!', 'success')
         return redirect(url_for('professional_dashboard'))
