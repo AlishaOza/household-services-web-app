@@ -55,3 +55,8 @@ class ServiceRemarksForm(FlaskForm):
     rating = FloatField('Rating', validators=[NumberRange(min=0, max=5, message="Rating must be between 0 and 5.")])
     remarks = TextAreaField('Remarks', validators=[DataRequired()])
     submit = SubmitField('Submit Remarks')
+
+class SearchForm(FlaskForm):
+    search_type = SelectField('Search Type', choices=[('service', 'Service'), ('professional', 'Professional'),('customer','Customer'),('service_request','Service Request')])
+    search_text = StringField('Search', validators=[DataRequired()])
+    submit = SubmitField('Search')
