@@ -3,7 +3,7 @@ from flask import Flask, jsonify, render_template, redirect, url_for, request, f
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import CustomerProfileForm, ProfessionalProfileForm, RegisterForm, ServiceForm, ServiceRemarksForm
+from forms import CustomerProfileForm, ProfessionalProfileForm, RegisterForm, SearchForm, ServiceForm, ServiceRemarksForm
 from models import CustomerProfile, db , User, Service, ProfessionalProfile, ServiceRequest
 from werkzeug.utils import secure_filename    
 
@@ -139,23 +139,56 @@ def admin_dashboard():
         return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests,user_dict=user_dict,service_type=service_type,prof_dict=prof_dict)
     return redirect(url_for('admin_login'))
 
-@app.route('/admin/search')
+@app.route('/admin/search', methods=['GET', 'POST'])
 def admin_search():
-    if 'admin_user_id' in session:
-        user_dict={}
-        prof_dict ={}
+    if not session.get('admin_user_id'):
+        flash('Admin! Please log in..', 'danger')
+        return redirect(url_for('admin_login'))
+    else:
+        form = SearchForm()
+        customers, professionals, services, service_requests = [], [], [], []
         service_type={}
-        services = Service.query.all()
-        professional_profile = ProfessionalProfile.query.all()
-        for profile in professional_profile:
-            user_dict[profile.user_id] = User.query.filter_by(id=profile.user_id).first()
+        prof_dict ={}
+        for profile in ProfessionalProfile.query.all():
             service_type[profile.user_id] = Service.query.filter_by(id=profile.service_type).first()
             prof_dict[profile.user_id] = profile
-        service_requests = ServiceRequest.query.all()
+            
+        if form.validate_on_submit():
+            search_type = form.search_type.data
+            search_term = form.search_text.data.strip()
+            
+            # Perform the appropriate search based on the selection in the dropdown
+            if search_type == 'customer':
+                customers = CustomerProfile.query.filter(
+                    (CustomerProfile.full_name.ilike(f"%{search_term}%")) |
+                    (CustomerProfile.address.ilike(f"%{search_term}%")) |
+                     (CustomerProfile.pin_code.ilike(f"%{search_term}%"))
+                ).all()
+                    
+            elif search_type == 'professional':
+                professionals = ProfessionalProfile.query.filter(
+                    (ProfessionalProfile.full_name.ilike(f"%{search_term}%")) |
+                    (ProfessionalProfile.address.ilike(f"%{search_term}%")) 
+                ).all()      
+            elif search_type == 'service':
+                services = Service.query.filter(
+                    Service.name.ilike(f"%{search_term}%") |
+                    Service.description.ilike(f"%{search_term}%") |
+                    Service.service_type.ilike(f"%{search_term}%")
+                ).all()
+            elif search_type == 'service_request':
+                service_requests = ServiceRequest.query.filter(
+                    (ServiceRequest.service_status.ilike(f"%{search_term}%")) | 
+                    (ServiceRequest.remarks.ilike(f"%{search_term}%"))
+                ).all()
+        
+            if not (customers or professionals or services or service_requests):
+                flash("No results found for your search.", "info")
 
-        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests,user_dict=user_dict,service_type=service_type,prof_dict=prof_dict)
-    return redirect(url_for('admin_login'))
-
+        return render_template('admin_search.html', form=form, 
+                customers=customers, professionals=professionals, 
+                services=services, service_requests=service_requests,service_type=service_type,prof_dict=prof_dict) 
+                                   
 @app.route('/admin/summary')
 def admin_summary():
     if 'admin_user_id' in session:

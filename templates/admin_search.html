@@ -1,20 +1,56 @@
-{% extends "base.html" %}
-{% block title %}Admin Dashboard{% endblock %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}A-Z Household Services{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+</head>
+<body>
 <div class="row">
+    <div class="col-md-4 offset-md-4">
+        <h3>Admin Search</h3>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}      
+        <form method="POST" action="{{ url_for('admin_search') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.search_type.label }}
+                {{ form.search_type }}
+            </div>
+            <div class="form-group">
+                {{ form.search_text.label }}
+                {{ form.search_text }}
+            </div>
+            <div class="form-group text-center">
+                {{ form.submit(class="btn btn-primary btn-sm btn-spacing") }}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm ">Cancel</a>
+            </div>
+        </form>                    
+    </div>
+</div> 
+<br>
+<br>        
+<div class="container mt-4">    
     <div class="col-md-12">
-        <h3>Manage Services</h3>
-        <div class="d-flex justify-content-end">
-            <a href="{{ url_for('create_services') }}"  class="btn btn-outline-success">Create Service</a>
-        </div>
+        {% if services %}
+        <h3>Services</h3>
         <table class="table table-striped">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
                     <th>Base Price</th>
-                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -23,14 +59,12 @@
                     <td>{{ service.id }}</td>
                     <td>{{ service.name }}</td>
                     <td>{{ service.price }}</td>
-                    <td>
-                        <a href="/admin/services/update_service/{{ service.id }}" class="btn btn-warning">Edit</a>
-                        <a href="/admin/services/delete_service/{{ service.id }}" class="btn btn-danger">Delete</a>
-                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        {% endif %}
+        {% if professionals %}
         <h3>Manage Professionals</h3>
         <table class="table table-striped">
             <thead>
@@ -40,27 +74,22 @@
                     <th>Service</th>
                     <th>Experience</th>
                     <th>Reviews</th>
-                    <th>Doc</th>
-                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                {% for professional in professional_profile %}
+                {% for professional in professionals %}
                 <tr>
                     <td>{{ professional.id }}</td>
                     <td>{{ professional.full_name }}</td>
                     <td>{{ service_type[professional.user_id].name }}</td>
                     <td>{{ professional.experience }}</td>
                     <td>{{ professional.reviews }}</td>
-                    <td><a href="/download/{{ professional.filename }}"  >{{ professional.filename }}</a></td>
-                    <td>
-                        <a href="/admin/manage_user/{{ professional.user_id }}/approve/{{user_dict[professional.user_id].approve}}" class="btn {{ 'btn-secondary' if user_dict[professional.user_id].approve else 'btn-success' }}">{{ 'Reject' if user_dict[professional.user_id].approve else 'Approve' }}</a>
-                        <a href="/admin/manage_user/{{ professional.user_id }}/blocked/{{user_dict[professional.user_id].blocked}}" class="btn {{ 'btn-success' if user_dict[professional.user_id].blocked else 'btn-danger' }}">{{ 'Unblock' if user_dict[professional.user_id].blocked else 'Block' }}</a>
-                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        {% endif %}
+        {% if service_requests %}
         <h3>Service Requests</h3>
         <table class="table table-striped">
             <thead>
@@ -79,11 +108,36 @@
                     <td>{{ prof_dict[service_request.professional_id].full_name}}</td>
                     <td>{{ service_request.date_of_request}}</td>
                     <td>{{ service_request.service_status}}</td>
-                    <td>{{ service_request.remarks if exists else ""}}</td>
+                    <td>{{ service_request.remarks if service_request.remarks else ""}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        {% endif %}
+        {% if customers %}
+        <h3>Customer</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Address</th>
+                    <th>Pin Code</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>{{ customer.full_name }}</td>
+                    <td>{{ customer.address }}</td>
+                    <td>{{ customer.pin_code }}</td>
+                </tr>
+                {% endfor %}    
+            </tbody>
+        </table>
+        {% endif %}
     </div>
 </div>
-{% endblock %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>   
+</body>
+</html>
