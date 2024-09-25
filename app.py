@@ -3,7 +3,7 @@ from flask import Flask, jsonify, render_template, redirect, url_for, request, f
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc, or_
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import CustomerProfileForm, ProfessionalProfileForm, ProfessionalSearchForm, RegisterForm, SearchForm, ServiceForm, ServiceRemarksForm
+from forms import CustomerProfileForm, CustomerSearchForm, ProfessionalProfileForm, ProfessionalSearchForm, RegisterForm, SearchForm, ServiceForm, ServiceRemarksForm
 from models import CustomerProfile, db , User, Service, ProfessionalProfile, ServiceRequest
 from werkzeug.utils import secure_filename    
 
@@ -340,23 +340,35 @@ def customer_dashboard():
         return render_template('customer_dashboard.html', services=services, service_requests=service_requests,prof_dict=prof_dict,service_dict=service_dict)
     return redirect(url_for('login'))
 
-@app.route('/customer/search')
+@app.route('/customer/search', methods=['GET', 'POST'])
 def customer_search():
-    if 'user_id' in session:
-        if request.args.get("service_type"):
-            services = Service.query.filter_by(service_type=request.args.get("service_type")).all()
-        else:
-            services = []
-        service_requests = ServiceRequest.query.filter_by(customer_id=session['user_id']).all()
-        professional_profile = ProfessionalProfile.query.all()
-        service_dict = {}  # Define service_dict here
-        prof_dict = {}  # Define user_dict here
-        for professional in professional_profile:
-            prof_dict[professional.user_id] = professional
-        for service in Service.query.all():
-            service_dict[service.id] = service
-        return render_template('customer_dashboard.html', services=services, service_requests=service_requests,prof_dict=prof_dict,service_dict=service_dict)
-    return redirect(url_for('login'))
+    if not session.get('user_id'):
+        flash('Please log in..', 'danger')
+        return redirect(url_for('logn'))
+    else:
+        form = CustomerSearchForm()
+        service_professional = []
+        if form.validate_on_submit():
+            search_type = form.search_type.data
+            search_term = form.search_text.data.strip()
+
+            service_professional =ProfessionalProfile.query.select_from(ProfessionalProfile).join(Service, ProfessionalProfile.service_type == Service.id).filter(
+                or_(
+                    ProfessionalProfile.address.ilike(f"%{search_term}%"),  # Search by address
+                    ProfessionalProfile.pin_code.ilike(f"%{search_term}%"),  # Search by pin code
+                    Service.name.ilike(f"%{search_term}%")  # Search by service name
+                )
+            ).with_entities(
+                ProfessionalProfile.pin_code,  # Professional's name
+                ProfessionalProfile.address,  # Professional's address
+                Service.name,  # Service name
+                Service.description, # Service description
+                Service.price  # Service base price
+            ).all()
+
+            if not (service_professional):
+                flash("No results found for your search.", "info")
+        return render_template('customer_search.html', form=form,service_professional=service_professional)      
 
 @app.route('/customer/summary')
 def customer_summary():

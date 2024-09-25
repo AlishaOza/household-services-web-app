@@ -79,6 +79,23 @@ class ProfessionalSearchForm(FlaskForm):
         
         elif self.search_type.data == 'location':
             # For location, we expect it to be alphabetic 
+            if not field.data.isalphanumeric():
+                raise ValidationError('Location must contain only alphabetic characters.')
+
+        elif self.search_type.data == 'pin':
+            # For PIN, expect only numbers (and a certain length if necessary, e.g., 6 digits)
+            if not field.data.isdigit() or len(field.data) != 6:
+                raise ValidationError('PIN must be a 6-digit number.')
+            
+class CustomerSearchForm(FlaskForm):
+    search_type = SelectField('Search Type', choices=[('service', 'Service Name'), ('location', 'Location'),('pin', 'PIN')])
+    search_text = StringField('Search', validators=[DataRequired()])
+    submit = SubmitField('Search')
+
+    def validate_search_text(self, field):
+        # Validate based on the search type        
+        if self.search_type.data == 'location':
+            # For location, we expect it to be alphabetic 
             if not field.data.isalpha():
                 raise ValidationError('Location must contain only alphabetic characters.')
 
@@ -86,3 +103,8 @@ class ProfessionalSearchForm(FlaskForm):
             # For PIN, expect only numbers (and a certain length if necessary, e.g., 6 digits)
             if not field.data.isdigit() or len(field.data) != 6:
                 raise ValidationError('PIN must be a 6-digit number.')
+        
+        elif self.search_type.data == 'service':
+            # For location, we expect it to be alphabetic 
+            if not field.data.isalpha():
+                raise ValidationError('Location must contain only alphabetic characters.')
