@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify, render_template, redirect, url_for, request, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import CustomerProfileForm, ProfessionalProfileForm, ProfessionalSearchForm, RegisterForm, SearchForm, ServiceForm, ServiceRemarksForm
 from models import CustomerProfile, db , User, Service, ProfessionalProfile, ServiceRequest
@@ -149,6 +149,8 @@ def admin_search():
         customers, professionals, services, service_requests = [], [], [], []
         service_type={}
         prof_dict ={}
+        service_dict = {}
+        cust_dict = {}   
         for profile in ProfessionalProfile.query.all():
             service_type[profile.user_id] = Service.query.filter_by(id=profile.service_type).first()
             prof_dict[profile.user_id] = profile
@@ -159,12 +161,13 @@ def admin_search():
             
             # Perform the appropriate search based on the selection in the dropdown
             if search_type == 'customer':
-                customers = CustomerProfile.query.filter(
-                    (CustomerProfile.full_name.ilike(f"%{search_term}%")) |
-                    (CustomerProfile.address.ilike(f"%{search_term}%")) |
-                     (CustomerProfile.pin_code.ilike(f"%{search_term}%"))
-                ).all()
-                    
+                for service in Service.query.all():
+                    service_dict[service.id] = service
+                for cust in CustomerProfile.query.all():
+                    cust_dict[cust.user_id] = cust
+                service_requests = (ServiceRequest.query.select_from(ServiceRequest).join(CustomerProfile, ServiceRequest.customer_id == CustomerProfile.user_id).filter(or_(CustomerProfile.full_name.ilike(f"%{search_term}%"),CustomerProfile.address.ilike(f"%{search_term}%"),CustomerProfile.pin_code.ilike(f"%{search_term}%"))).all())
+                customers = service_requests
+
             elif search_type == 'professional':
                 professionals = ProfessionalProfile.query.filter(
                     (ProfessionalProfile.full_name.ilike(f"%{search_term}%")) |
@@ -187,7 +190,7 @@ def admin_search():
 
         return render_template('admin_search.html', form=form, 
                 customers=customers, professionals=professionals, 
-                services=services, service_requests=service_requests,service_type=service_type,prof_dict=prof_dict) 
+                services=services, service_requests=service_requests,service_type=service_type,prof_dict=prof_dict,cust_dict=cust_dict,service_dict=service_dict) 
                                    
 @app.route('/admin/summary')
 def admin_summary():
