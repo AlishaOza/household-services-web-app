@@ -3,6 +3,8 @@ from wtforms import DecimalField, FileField, FloatField, IntegerField, Label, St
 from wtforms.validators import InputRequired, DataRequired, Length, NumberRange
 from flask_wtf.file import FileRequired, FileAllowed
 from models import Service, User
+from wtforms.validators import DataRequired, ValidationError
+import re
 
 class RegisterForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=4, max=15)])
@@ -60,3 +62,27 @@ class SearchForm(FlaskForm):
     search_type = SelectField('Search Type', choices=[('service', 'Service'), ('professional', 'Professional'),('customer','Customer'),('service_request','Service Request')])
     search_text = StringField('Search', validators=[DataRequired()])
     submit = SubmitField('Search')
+
+
+class ProfessionalSearchForm(FlaskForm):
+    search_type = SelectField('Search Type', choices=[('date', 'Date'), ('location', 'Location'),('pin', 'PIN')])
+    search_text = StringField('Search', validators=[DataRequired()])
+    submit = SubmitField('Search')
+
+    def validate_search_text(self, field):
+        # Validate based on the search type
+        if self.search_type.data == 'date':
+            # For date, expect a valid format (YYYY-MM-DD)
+            if not re.match(r'^\d{4}-\d{2}-\d{2}$', field.data):
+                raise ValidationError('Invalid date format. Use YYYY-MM-DD.')
+                
+        
+        elif self.search_type.data == 'location':
+            # For location, we expect it to be alphabetic 
+            if not field.data.isalpha():
+                raise ValidationError('Location must contain only alphabetic characters.')
+
+        elif self.search_type.data == 'pin':
+            # For PIN, expect only numbers (and a certain length if necessary, e.g., 6 digits)
+            if not field.data.isdigit() or len(field.data) != 6:
+                raise ValidationError('PIN must be a 6-digit number.')

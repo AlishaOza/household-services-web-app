@@ -3,7 +3,7 @@ from flask import Flask, jsonify, render_template, redirect, url_for, request, f
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from werkzeug.security import generate_password_hash, check_password_hash
-from forms import CustomerProfileForm, ProfessionalProfileForm, RegisterForm, SearchForm, ServiceForm, ServiceRemarksForm
+from forms import CustomerProfileForm, ProfessionalProfileForm, ProfessionalSearchForm, RegisterForm, SearchForm, ServiceForm, ServiceRemarksForm
 from models import CustomerProfile, db , User, Service, ProfessionalProfile, ServiceRequest
 from werkzeug.utils import secure_filename    
 
@@ -494,25 +494,36 @@ def professional_dashboard():
         return render_template('professional_dashboard.html', service_requests=service_requests, services=services,cust_dict=cust_dict,service_dict=service_dict,service_requests_closed=service_requests_closed)
     return redirect(url_for('login'))
 
-@app.route('/professional/search')
+@app.route('/professional/search',methods=['GET', 'POST'])
 def professional_search():
-    if 'user_id' in session:
+    if not session.get('user_id'):
+        flash('Please log in..', 'danger')
+        return redirect(url_for('login'))
+    else:
+        form = ProfessionalSearchForm()
         professional_id = session['user_id']
-        service_requests = ServiceRequest.query.filter_by(professional_id=professional_id,service_status='requested').all()
-        service_requests_closed = ServiceRequest.query.filter(ServiceRequest.professional_id==professional_id,ServiceRequest.service_status != 'requested').all()
-        serviceIdList = []    
-        for request in service_requests:
-            serviceIdList.append(request.service_id)
-        services = Service.query.filter(Service.id.in_(serviceIdList)).all()
+        service_requests = []
         cust_dict = {}
         service_dict = {}
-        for service in Service.query.all():
-            service_dict[service.id] = service
-        for cust in CustomerProfile.query.all():
-            cust_dict[cust.user_id] = cust
-        return render_template('professional_dashboard.html', service_requests=service_requests, services=services,cust_dict=cust_dict,service_dict=service_dict,service_requests_closed=service_requests_closed)
-    return redirect(url_for('login'))
-
+        
+        if form.validate_on_submit():
+            search_type = form.search_type.data
+            search_term = form.search_text.data.strip()
+            for service in Service.query.all():
+                service_dict[service.id] = service
+            for cust in CustomerProfile.query.all():
+                cust_dict[cust.user_id] = cust        
+                
+            if search_type == 'date':
+                service_requests = ServiceRequest.query.filter(ServiceRequest.date_of_request.ilike(f"%{search_term}%"), ServiceRequest.professional_id == professional_id).all()
+            elif search_type == 'location':
+                service_requests = ServiceRequest.query.select_from(ServiceRequest).join(CustomerProfile, ServiceRequest.customer_id == CustomerProfile.user_id).filter(CustomerProfile.address.ilike(f"%{search_term}%"),ServiceRequest.professional_id == professional_id).all()    
+            elif search_type == 'pin':
+                service_requests = ServiceRequest.query.select_from(ServiceRequest).join(CustomerProfile, ServiceRequest.customer_id == CustomerProfile.user_id).filter(CustomerProfile.pin_code.ilike(f"%{search_term}%"),ServiceRequest.professional_id == professional_id).all()
+            if not (service_requests):
+                flash("No results found for your search.", "info")
+        return render_template('professional_search.html', form=form,service_requests=service_requests,cust_dict=cust_dict,service_dict=service_dict)  
+    
 @app.route('/professional/summary')
 def professional_summary():
     if 'user_id' in session:
