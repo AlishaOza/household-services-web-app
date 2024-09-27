@@ -3,72 +3,145 @@
 
 {% block content %}
     <div class="container">
-        <h1 class="mt-5">Multiple Charts Example</h1>
+        <h3 class="mt-5">Summary</h3>
         <div class="row">
             <div class="col-md-6">
-                <h2>Chart 1</h2>
-                <canvas id="myChart1" width="400" height="200"></canvas>
+                <h3>Overall Customer Ratings</h3>
+                <canvas id="reviewsDoughnutChart" width="400" height="200"></canvas>
             </div>
             <div class="col-md-6">
-                <h2>Chart 2</h2>
-                <canvas id="myChart2" width="400" height="200"></canvas>
+                <h3>Service Request Summary</h3>
+                <canvas id="serviceRequests" width="400" height="400"></canvas>
             </div>
         </div>
     </div>
     
     <script>
-        function fetchData(url) {
-            return fetch(url)
-                .then(response => response.json());
+        async function fetchReviewsData() {
+            try {
+                // Fetch data from the Flask API
+                const response = await fetch('http://127.0.0.1:5000/summary/reviews');
+                const data = await response.json();
+                
+                // Extract labels and reviews from the response
+                const labels = data.map(item => item.full_name);
+                const reviews = data.map(item => item.reviews);
+                
+                // Call the function to update the doughnut chart
+                updateDoughnutChart(labels, reviews);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
         }
 
-        fetchData('/data1').then(data => {
-            var ctx1 = document.getElementById('myChart1').getContext('2d');
-            new Chart(ctx1, {
+        function updateDoughnutChart(labels, data) {
+            var ctx = document.getElementById('reviewsDoughnutChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,  // Dynamic labels (professional names)
+                    datasets: [{
+                        label: 'Reviews of Professionals',
+                        data: data,   // Dynamic data (reviews count)
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    var value = tooltipItem.raw;
+                                    return 'Reviews: ' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        async function fetchServiceRequests() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/summary/service_requests');
+                const data = await response.json();
+                
+                // Extract labels and reviews from the response
+                const labels = data.map(item => item.date);
+                const count = data.map(item => item.count);
+                
+                // Call the function to update the doughnut chart
+                updateServiceRequestChart(labels, count);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+        function updateServiceRequestChart(labels, data){    
+            var ctx = document.getElementById('serviceRequests').getContext('2d');
+            new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: data.labels,
+                    labels: labels,  // Dynamic labels (Date)
                     datasets: [{
-                        label: 'Chart 1 Dataset',
-                        data: data.values,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        label: 'Service Request Summary',
+                        data: data,   // Dynamic data (Count)
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
                         borderWidth: 1
                     }]
                 },
                 options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    var value = tooltipItem.raw;
+                                    return 'Count: ' + value;
+                                }
+                            }
                         }
                     }
                 }
             });
-        });
+        }
 
-        fetchData('/data2').then(data => {
-            var ctx2 = document.getElementById('myChart2').getContext('2d');
-            new Chart(ctx2, {
-                type: 'pie',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Chart 2 Dataset',
-                        data: data.values,
-                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                        borderColor: 'rgba(153, 102, 255, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        });
+         
+        // Fetch data and update the chart on page load
+        window.onload = function() {
+            fetchReviewsData();
+            fetchServiceRequests();
+        };
+    
+        
     </script>
 
 {% endblock %}

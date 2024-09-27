@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify, render_template, redirect, url_for, request, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import desc, or_
+from sqlalchemy import desc, func, or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import CustomerProfileForm, CustomerSearchForm, ProfessionalProfileForm, ProfessionalSearchForm, RegisterForm, SearchForm, ServiceForm, ServiceRemarksForm
 from models import CustomerProfile, db , User, Service, ProfessionalProfile, ServiceRequest
@@ -567,19 +567,18 @@ def update_request_status(status,request_id):
         return redirect(url_for('professional_dashboard'))
     return redirect(url_for('login'))
 
-@app.route('/data1')
-def data1():
-    # Example data for Chart 1
-    labels = ['January', 'February', 'March', 'April', 'May', 'June', 'July']
-    values = [12, 19, 3, 5, 2, 3, 7]
-    return jsonify(labels=labels, values=values)
+# Define an API endpoint to return the reviews data
+@app.route('/summary/reviews', methods=['GET'])
+def get_reviews():
+    professionals = ProfessionalProfile.query.with_entities(ProfessionalProfile.full_name,ProfessionalProfile.reviews).all()
+    reviews_data = [{"full_name": p.full_name, "reviews": p.reviews} for p in professionals]
+    return jsonify(reviews_data)
 
-@app.route('/data2')
-def data2():
-    # Example data for Chart 2
-    labels = ['August', 'September', 'October', 'November', 'December']
-    values = [10, 20, 15, 25, 30]
-    return jsonify(labels=labels, values=values)
+@app.route('/summary/service_requests', methods=['GET'])
+def get_service_requests():
+    service_requests = (db.session.query(func.date(ServiceRequest.date_of_completion), func.count(ServiceRequest.id)).filter(ServiceRequest.date_of_completion!=None).group_by(func.date(ServiceRequest.date_of_completion)).all())
+    datewise_requests =[{"date": str(sr[0]), "count": sr[1]} for sr in service_requests]   
+    return jsonify(datewise_requests)
 
 if __name__ == '__main__':
     app.run(debug=True)
