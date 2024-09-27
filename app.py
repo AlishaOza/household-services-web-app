@@ -5,7 +5,8 @@ from sqlalchemy import desc, func, or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import CustomerProfileForm, CustomerSearchForm, ProfessionalProfileForm, ProfessionalSearchForm, RegisterForm, SearchForm, ServiceForm, ServiceRemarksForm
 from models import CustomerProfile, db , User, Service, ProfessionalProfile, ServiceRequest
-from werkzeug.utils import secure_filename    
+from werkzeug.utils import secure_filename   
+from flask_cors import CORS 
 
 app = Flask(__name__)
 
@@ -579,6 +580,8 @@ def get_service_requests():
     service_requests = (db.session.query(func.date(ServiceRequest.date_of_completion), func.count(ServiceRequest.id)).filter(ServiceRequest.date_of_completion!=None).group_by(func.date(ServiceRequest.date_of_completion)).all())
     datewise_requests =[{"date": str(sr[0]), "count": sr[1]} for sr in service_requests]   
     return jsonify(datewise_requests)
+
+CORS(app)
 
 if __name__ == '__main__':
     app.run(debug=True)
