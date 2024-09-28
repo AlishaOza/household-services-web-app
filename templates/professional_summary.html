@@ -20,7 +20,7 @@
         async function fetchReviewsData() {
             try {
                 // Fetch data from the Flask API
-                const response = await fetch('http://127.0.0.1:5000/professional/summary/reviews/{{session.get('user_id')}}');
+                const response = await fetch('http://127.0.0.1:5000/professional/summary/reviews/{{session.get("user_id")}}');
                 const data = await response.json();
                 
                 // Extract labels and reviews from the response
@@ -78,7 +78,7 @@
         }
         async function fetchServiceRequests() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/professional/summary/service_requests/{{session.get('user_id')}}');
+                const response = await fetch('http://127.0.0.1:5000/professional/summary/service_requests/{{session.get("user_id")}}');
                 const data = await response.json();
                 
                 // Extract labels and reviews from the response

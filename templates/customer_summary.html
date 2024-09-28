@@ -11,7 +11,7 @@
     <script>
         async function fetchServiceRequestsCustomer() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/customer/summary/service_requests/{{session.get('user_id')}}');
+                const response = await fetch('http://127.0.0.1:5000/customer/summary/service_requests/{{session.get("user_id")}}');
                 const data = await response.json();
                 
                 // Extract labels and reviews from the response
