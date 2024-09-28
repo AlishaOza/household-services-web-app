@@ -193,16 +193,7 @@ def admin_search():
                 customers=customers, professionals=professionals, 
                 services=services, service_requests=service_requests,service_type=service_type,prof_dict=prof_dict,cust_dict=cust_dict,service_dict=service_dict) 
                                    
-@app.route('/admin/summary')
-def admin_summary():
-    if 'admin_user_id' in session:
-        services = Service.query.all()
-        professional_profile = ProfessionalProfile.query.all()
-        service_requests = ServiceRequest.query.all()
-        return render_template('admin_summary.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests)
-    return redirect(url_for('admin_login'))
-
-# Manage User Route
+# Manage Professional User Route
 @app.route('/admin/manage_user/<int:user_id>/<string:field>/<string:value>', methods=['GET', 'POST'])
 def manage_user(user_id,field,value):
     if not session.get('admin_user_id'):
@@ -371,14 +362,6 @@ def customer_search():
                 flash("No results found for your search.", "info")
         return render_template('customer_search.html', form=form,service_professional=service_professional)      
 
-@app.route('/customer/summary')
-def customer_summary():
-    if 'user_id' in session:
-        services = Service.query.all()
-        return render_template('customer_summary.html', services=services)
-    return redirect(url_for('login'))
-
-
 @app.route('/customer/create_service_request/<int:service_id>', methods=['GET', 'POST'])
 def create_service_request(service_id):
     if 'user_id' in session:
@@ -539,19 +522,6 @@ def professional_search():
             if not (service_requests):
                 flash("No results found for your search.", "info")
         return render_template('professional_search.html', form=form,service_requests=service_requests,cust_dict=cust_dict,service_dict=service_dict)  
-    
-@app.route('/professional/summary')
-def professional_summary():
-    if 'user_id' in session:
-        professional_id = session['user_id']
-        service_requests = ServiceRequest.query.filter_by(professional_id=professional_id).all()
-        serviceIdList = []    
-        for request in service_requests:
-            serviceIdList.append(request.service_id)
-        services = Service.query.filter(Service.id.in_(serviceIdList)).all()
-        return render_template('professional_summary.html', service_requests=service_requests, services=services)
-    return redirect(url_for('login'))
-
 
 @app.route('/professional/update_request_status/<string:status>/<int:request_id>')
 def update_request_status(status,request_id):
