@@ -76,6 +76,14 @@ def login():
             session['user_id'] = user.id
             session['role'] = user.role
             if user.role == 'customer':
+                #Check if customer profile is approved
+                if not user.approve:
+                    flash('Your account is not approved yet! Please wait for the admin to approve.', 'danger')
+                    return redirect(url_for('login'))
+                # Check if customer profile is blocked
+                if user.blocked:
+                    flash('Your account is blocked! Please contact the admin.', 'danger')
+                    return redirect(url_for('login'))
                 # Check if the customer profile is incomplete
                 customer_profile = CustomerProfile.query.filter_by(user_id = user.id).first()
                 if not customer_profile:
@@ -86,6 +94,14 @@ def login():
                 professional_profile = ProfessionalProfile.query.filter_by(user_id = user.id).first()
                 if not professional_profile:
                     return redirect(url_for('professional_profile'))
+                # Check if professional profile is approved
+                if not user.approve:
+                    flash('Your account is not approved yet! Please wait for the admin to approve.', 'danger')
+                    return redirect(url_for('login'))
+                # Check if professional profile is blocked
+                if user.blocked:
+                    flash('Your account is blocked! Please contact the admin.', 'danger')
+                    return redirect(url_for('login'))
                 return redirect(url_for('professional_dashboard'))
         flash('Invalid Credentials', 'danger')
     return render_template('login.html')        
@@ -136,8 +152,8 @@ def admin_dashboard():
             service_type[profile.user_id] = Service.query.filter_by(id=profile.service_type).first()
             prof_dict[profile.user_id] = profile
         service_requests = ServiceRequest.query.all()
-
-        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests,user_dict=user_dict,service_type=service_type,prof_dict=prof_dict)
+        users = db.session.query(User.id,User.username,User.approve,User.blocked).filter(User.role=='customer').all()
+        return render_template('admin_dashboard.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests,user_dict=user_dict,service_type=service_type,prof_dict=prof_dict,users=users)
     return redirect(url_for('admin_login'))
 
 @app.route('/admin/search', methods=['GET', 'POST'])
@@ -196,10 +212,7 @@ def admin_search():
 @app.route('/admin/summary')
 def admin_summary():
     if 'admin_user_id' in session:
-        services = Service.query.all()
-        professional_profile = ProfessionalProfile.query.all()
-        service_requests = ServiceRequest.query.all()
-        return render_template('admin_summary.html', services=services, professional_profile=professional_profile, customer_profile=customer_profile, service_requests=service_requests)
+        return render_template('admin_summary.html')
     return redirect(url_for('admin_login'))
 
 # Manage User Route
@@ -212,10 +225,10 @@ def manage_user(user_id,field,value):
     if user and  field == 'approve':
         if value == 'False':
             user.approve = True
-            flash('Professional approved successfully', 'success')
+            flash('Professional/Customer approved successfully', 'success')
         elif value == 'True':
             user.approve = False
-            flash('Professional rejected successfully', 'danger')
+            flash('Professional/Customer rejected successfully', 'danger')
 
     if user and field == 'blocked' :
         if value == 'False':
@@ -374,8 +387,7 @@ def customer_search():
 @app.route('/customer/summary')
 def customer_summary():
     if 'user_id' in session:
-        services = Service.query.all()
-        return render_template('customer_summary.html', services=services)
+        return render_template('customer_summary.html')
     return redirect(url_for('login'))
 
 
@@ -484,6 +496,9 @@ def professional_profile():
                 db.session.add(new_professional_profile)
                 db.session.commit()
                 flash('Profile updated successfully!', 'success')
+                user = User.query.filter_by(id=user_id).first()
+                if user.blocked or not user.approve:
+                    return redirect(url_for('login'))
                 return redirect(url_for('professional_dashboard'))
             else:
                 flash('Invalid file format! Please upload only images and PDFs.', 'danger')
@@ -543,15 +558,8 @@ def professional_search():
 @app.route('/professional/summary')
 def professional_summary():
     if 'user_id' in session:
-        professional_id = session['user_id']
-        service_requests = ServiceRequest.query.filter_by(professional_id=professional_id).all()
-        serviceIdList = []    
-        for request in service_requests:
-            serviceIdList.append(request.service_id)
-        services = Service.query.filter(Service.id.in_(serviceIdList)).all()
-        return render_template('professional_summary.html', service_requests=service_requests, services=services)
+        return render_template('professional_summary.html')
     return redirect(url_for('login'))
-
 
 @app.route('/professional/update_request_status/<string:status>/<int:request_id>')
 def update_request_status(status,request_id):
