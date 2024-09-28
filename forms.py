@@ -79,7 +79,7 @@ class ProfessionalSearchForm(FlaskForm):
         
         elif self.search_type.data == 'location':
             # For location, we expect it to be alphabetic 
-            if not field.data.isalphanumeric():
+            if not field.data.isalpha():
                 raise ValidationError('Location must contain only alphabetic characters.')
 
         elif self.search_type.data == 'pin':

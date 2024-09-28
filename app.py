@@ -569,17 +569,36 @@ def update_request_status(status,request_id):
     return redirect(url_for('login'))
 
 # Define an API endpoint to return the reviews data
-@app.route('/summary/reviews', methods=['GET'])
+@app.route('/admin/summary/reviews', methods=['GET'])
 def get_reviews():
     professionals = ProfessionalProfile.query.with_entities(ProfessionalProfile.full_name,ProfessionalProfile.reviews).all()
     reviews_data = [{"full_name": p.full_name, "reviews": p.reviews} for p in professionals]
     return jsonify(reviews_data)
 
-@app.route('/summary/service_requests', methods=['GET'])
+@app.route('/admin/summary/service_requests', methods=['GET'])
 def get_service_requests():
     service_requests = (db.session.query(func.date(ServiceRequest.date_of_completion), func.count(ServiceRequest.id)).filter(ServiceRequest.date_of_completion!=None).group_by(func.date(ServiceRequest.date_of_completion)).all())
     datewise_requests =[{"date": str(sr[0]), "count": sr[1]} for sr in service_requests]   
     return jsonify(datewise_requests)
+
+@app.route('/customer/summary/service_requests/<int:customer_id>', methods=['GET'])
+def get_service_requests_customer(customer_id):
+    service_requests_customer = (db.session.query(func.date(ServiceRequest.date_of_completion), func.count(ServiceRequest.id)).filter(ServiceRequest.date_of_completion!=None,ServiceRequest.customer_id==customer_id).group_by(func.date(ServiceRequest.date_of_completion)).all())
+    datewise_requests =[{"date": str(sr[0]), "count": sr[1]} for sr in service_requests_customer]   
+    return jsonify(datewise_requests)
+
+@app.route('/professional/summary/reviews/<int:professional_id>', methods=['GET'])
+def get_reviews_professional(professional_id):
+    professionals = ProfessionalProfile.query.with_entities(ProfessionalProfile.full_name,ProfessionalProfile.reviews).filter(ProfessionalProfile.user_id==professional_id).all()
+    reviews_data = [{"full_name": p.full_name, "reviews": p.reviews} for p in professionals]
+    return jsonify(reviews_data)
+
+@app.route('/professional/summary/service_requests/<int:professional_id>', methods=['GET'])
+def get_service_requests_professional(professional_id):
+    service_requests = (db.session.query(func.date(ServiceRequest.date_of_completion), func.count(ServiceRequest.id)).join(ProfessionalProfile,ServiceRequest.professional_id==ProfessionalProfile.user_id).filter(ServiceRequest.date_of_completion!=None,ProfessionalProfile.user_id==professional_id).group_by(func.date(ServiceRequest.date_of_completion)).all())
+    datewise_requests =[{"date": str(sr[0]), "count": sr[1]} for sr in service_requests]   
+    return jsonify(datewise_requests)
+
 
 CORS(app)
 
