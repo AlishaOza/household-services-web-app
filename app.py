@@ -7,6 +7,7 @@ from forms import CustomerProfileForm, CustomerSearchForm, ProfessionalProfileFo
 from models import CustomerProfile, db , User, Service, ProfessionalProfile, ServiceRequest
 from werkzeug.utils import secure_filename   
 from flask_cors import CORS 
+from flasgger import Swagger
 
 app = Flask(__name__)
 
@@ -38,6 +39,23 @@ def create_tables():
 # Serve downloadable files from a 'files' directory
 @app.route('/download/<string:filename>')
 def download_file(filename):
+    """
+    Download a file from the server.
+    ---
+    tags:
+      - Files
+    parameters:
+      - name: filename
+        in: path
+        type: string
+        required: true
+        description: The name of the file to download.
+    responses:
+      200:
+        description: File downloaded successfully.
+      404:
+        description: File not found.
+    """
     # Set the directory where your files are located
     file_directory = os.path.join(app.root_path, 'uploads')
     
@@ -47,10 +65,47 @@ def download_file(filename):
 # Home Route
 @app.route('/')
 def index():
+    """
+    Home page endpoint.
+    ---
+    tags:
+      - Home
+    responses:
+      200:
+        description: Successfully rendered the home page.
+    """
     return render_template('index.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    User registration endpoint.
+    ---
+    tags:
+      - User
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+              example: "john_doe"
+            password:
+              type: string
+              example: "secure_password"
+            role:
+              type: string
+              enum: ["customer", "professional"]
+              example: "customer"
+    responses:
+      200:
+        description: Registration successful, redirecting to login.
+      400:
+        description: Username already exists.
+    """
     form = RegisterForm()
     if form.validate_on_submit():
         existing_user = User.query.filter_by(username=form.username.data).first()
@@ -68,6 +123,32 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    User login endpoint.
+    ---
+    tags:
+      - User
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+              example: "john_doe"
+            password:
+              type: string
+              example: "secure_password"
+    responses:
+      200:
+        description: Successfully logged in and redirected based on role.
+      401:
+        description: Invalid credentials.
+      403:
+        description: Account is blocked or not approved.
+    """
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -109,6 +190,17 @@ def login():
 # Logout route for admin
 @app.route('/logout')
 def logout():
+    """
+    User logout endpoint.
+    ---
+    tags:
+      - User
+    responses:
+      200:
+        description: Successfully logged out and redirected to the login page.
+      401:
+        description: User not logged in.
+    """
     session.pop('user_id', None)
     flash('Logged out successfully', 'success')
     return redirect(url_for('login'))
@@ -116,6 +208,30 @@ def logout():
 # Admin Login Route
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
+    """
+    Admin login endpoint.
+    ---
+    tags:
+      - Admin
+    parameters:
+      - name: username
+        in: formData
+        type: string
+        required: true
+        description: The admin username.
+      - name: password
+        in: formData
+        type: string
+        required: true
+        description: The admin password.
+    responses:
+      200:
+        description: Successfully logged in and redirected to the admin dashboard.
+      401:
+        description: Invalid credentials provided.
+      403:
+        description: Admin role required to access this endpoint.
+    """
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -129,6 +245,17 @@ def admin_login():
 
 @app.route('/admin/profile', methods=['GET', 'POST'])
 def admin_profile():
+    """
+    Render the admin profile page. No profile changes can be made.
+    ---
+    tags:
+      - Admin
+    responses:
+      200:
+        description: Renders the admin profile page.
+      401:
+        description: Admin user is not authorized to access this page.
+    """
     if not session.get('admin_user_id'):
         flash('Admin! Please log in..', 'danger')
         return redirect(url_for('admin_login'))
@@ -141,6 +268,17 @@ def admin_profile():
 # Admin Dashboard
 @app.route('/admin/dashboard')
 def admin_dashboard():
+    """
+    Render the admin dashboard with overview information.
+    ---
+    tags:
+      - Admin
+    responses:
+      200:
+        description: Renders the admin dashboard with services, professional profiles, customer profiles, service requests, and user information.
+      401:
+        description: Admin user is not authorized to access this page.
+    """
     if 'admin_user_id' in session:
         user_dict={}
         prof_dict ={}
@@ -158,6 +296,29 @@ def admin_dashboard():
 
 @app.route('/admin/search', methods=['GET', 'POST'])
 def admin_search():
+    """
+    Search for customers, professionals, services, or service requests.
+    ---
+    tags:
+      - Admin
+    parameters:
+      - name: search_type
+        in: query
+        required: true
+        type: string
+        enum: [customer, professional, service, service_request]
+        description: Type of entity to search for.
+      - name: search_text
+        in: query
+        required: true
+        type: string
+        description: Text to search for within the specified entity type.
+    responses:
+      200:
+        description: Renders the admin search results page.
+      401:
+        description: Admin user is not authorized to access this page.
+    """
     if not session.get('admin_user_id'):
         flash('Admin! Please log in..', 'danger')
         return redirect(url_for('admin_login'))
@@ -211,6 +372,17 @@ def admin_search():
                                    
 @app.route('/admin/summary')
 def admin_summary():
+    """
+    Render the admin summary page.
+    ---
+    tags:
+      - Admin
+    responses:
+      200:
+        description: Renders the admin summary page.
+      401:
+        description: User is not authorized to access this page.
+    """
     if 'admin_user_id' in session:
         return render_template('admin_summary.html')
     return redirect(url_for('admin_login'))
@@ -218,6 +390,33 @@ def admin_summary():
 # Manage User Route
 @app.route('/admin/manage_user/<int:user_id>/<string:field>/<string:value>', methods=['GET', 'POST'])
 def manage_user(user_id,field,value):
+    """
+    Approve/Reject or Block/Unblock a user.
+    ---
+    tags:
+      - Admin
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+        description: ID of the user to manage.
+      - name: field
+        in: path
+        type: string
+        required: true
+        description: Field to update (approve or blocked).
+      - name: value
+        in: path
+        type: string
+        required: true
+        description: Value to set for the field ('True' or 'False').
+    responses:
+      302:
+        description: Redirects to the admin dashboard after managing the user.
+      401:
+        description: User is not authorized to perform this action.
+    """
     if not session.get('admin_user_id'):
         return redirect(url_for('admin_login'))
     user = User.query.filter_by(id=user_id).first()
@@ -246,6 +445,38 @@ def manage_user(user_id,field,value):
 # Manage Services Route (CRUD operations)
 @app.route('/admin/services/create_services', methods=['GET', 'POST'])
 def create_services():
+    """
+    Create a new service.
+    ---
+    tags:
+      - Admin
+    parameters:
+      - name: service_type
+        in: formData
+        type: string
+        required: true
+        description: Type of the service.
+      - name: name
+        in: formData
+        type: string
+        required: true
+        description: Name of the service.
+      - name: price
+        in: formData
+        type: number
+        required: true
+        description: Price of the service.
+      - name: description
+        in: formData
+        type: string
+        required: true
+        description: Description of the service.
+    responses:
+      200:
+        description: Successfully created a new service.
+      302:
+        description: Redirects to the admin dashboard after creating the service.
+    """
     if not session.get('admin_user_id'):
         flash('Please log in to complete your profile.', 'danger')
         return redirect(url_for('admin_login'))
@@ -269,6 +500,45 @@ def create_services():
 # Update Services Route (CRUD operations)
 @app.route('/admin/services/update_service/<int:service_id>', methods=['GET', 'POST'])
 def update_services(service_id):
+    """
+    Update an existing service by ID.
+    ---
+    tags:
+      - Admin
+    parameters:
+      - name: service_id
+        in: path
+        type: integer
+        required: true
+        description: ID of the service to be updated.
+      - name: service_type
+        in: formData
+        type: string
+        required: true
+        description: Type of the service.
+      - name: name
+        in: formData
+        type: string
+        required: true
+        description: Name of the service.
+      - name: price
+        in: formData
+        type: number
+        required: true
+        description: Price of the service.
+      - name: description
+        in: formData
+        type: string
+        required: true
+        description: Description of the service.
+    responses:
+      200:
+        description: Successfully updated the service.
+      404:
+        description: Service not found.
+      302:
+        description: Redirects to the admin dashboard after updating the service.
+    """
     if not session.get('admin_user_id'):
         flash('Please log in to complete your profile.', 'danger')
         return redirect(url_for('admin_login'))
@@ -290,6 +560,25 @@ def update_services(service_id):
 # Handle delete operation
 @app.route('/admin/services/delete_service/<int:service_id>', methods=['GET', 'POST'])
 def delete_services(service_id):
+    """
+    Delete a specific service by ID.
+    ---
+    tags:
+      - Admin
+    parameters:
+      - name: service_id
+        in: path
+        type: integer
+        required: true
+        description: ID of the service to be deleted.
+    responses:
+      200:
+        description: Successfully deleted the service.
+      404:
+        description: Service not found.
+      302:
+        description: Redirects to the admin dashboard after deletion.
+    """
     service_to_delete = Service.query.get(service_id)
     if service_to_delete:
         db.session.delete(service_to_delete)
@@ -300,12 +589,42 @@ def delete_services(service_id):
 # Logout route for admin
 @app.route('/admin/logout')
 def admin_logout():
+    """
+    Log out the admin user.
+    ---
+    tags:
+      - Admin
+    responses:
+      200:
+        description: Successfully logged out the admin user.
+      302:
+        description: Redirects to the admin login page.
+    """
     session.pop('admin_user_id', None)
     flash('Logged out successfully', 'success')
     return redirect(url_for('admin_login'))
 
 @app.route('/customer/profile', methods=['GET', 'POST'])
 def customer_profile():
+    """
+    Retrieve and update the customer's profile.
+    ---
+    tags:
+      - Customer
+    parameters:
+      - name: user_id
+        in: session
+        type: integer
+        required: true
+        description: "ID of the logged-in customer."
+    responses:
+      200:
+        description: Renders the customer profile form.
+      302:
+        description: Redirects to the login page if the user is not logged in.
+      201:
+        description: Customer profile updated successfully.
+    """
     if not session.get('user_id'):
         flash('Please log in to complete your profile.', 'danger')
         return redirect(url_for('login'))
@@ -335,9 +654,26 @@ def customer_profile():
     return render_template('customer_profile.html', form=form)
 
 
-# `Customer` Dashboard
+# Customer Dashboard
 @app.route('/customer/dashboard', methods=['GET', 'POST'])
 def customer_dashboard():
+    """
+    Retrieve the customer dashboard with available services and service requests.
+    ---
+    tags:
+      - Customer
+    parameters:
+      - name: service_type
+        in: query
+        type: string
+        required: false
+        description: "Filter services by service type."
+    responses:
+      200:
+        description: Renders the customer dashboard with available services and service requests.
+      302:
+        description: Redirects to the login page if the user is not logged in.
+    """
     if 'user_id' in session:
         if request.args.get("service_type"):
             services = Service.query.filter_by(service_type=request.args.get("service_type")).all()
@@ -356,6 +692,30 @@ def customer_dashboard():
 
 @app.route('/customer/search', methods=['GET', 'POST'])
 def customer_search():
+    """
+    Search for service professionals based on address, pin code, or service name.
+    ---
+    tags:
+      - Customer
+    parameters:
+      - name: search_type
+        in: formData
+        type: string
+        required: true
+        description: "The type of search to perform (e.g., address, pin code, service name)."
+      - name: search_text
+        in: formData
+        type: string
+        required: true
+        description: "The text to search for based on the selected search type."
+    responses:
+      200:
+        description: Renders the customer search results page with the professionals found.
+      302:
+        description: Redirects to the login page if the user is not logged in.
+      400:
+        description: A flash message indicating no results were found for the search.
+    """
     if not session.get('user_id'):
         flash('Please log in..', 'danger')
         return redirect(url_for('logn'))
@@ -386,6 +746,17 @@ def customer_search():
 
 @app.route('/customer/summary')
 def customer_summary():
+    """
+    Get the customer summary page.
+    ---
+    tags:
+      - Customer
+    responses:
+      200:
+        description: Renders the customer summary page.
+      302:
+        description: Redirects to the login page if the user is not logged in.
+    """
     if 'user_id' in session:
         return render_template('customer_summary.html')
     return redirect(url_for('login'))
@@ -393,6 +764,25 @@ def customer_summary():
 
 @app.route('/customer/create_service_request/<int:service_id>', methods=['GET', 'POST'])
 def create_service_request(service_id):
+    """
+    Create a service request for a specified service.
+    ---
+    tags:
+      - Customer
+    parameters:
+      - name: service_id
+        in: path
+        type: integer
+        required: true
+        description: "The ID of the service for which the request is being created."
+    responses:
+      200:
+        description: Redirects to the customer dashboard upon successful creation of the service request.
+      302:
+        description: Redirects to the login page if the user is not logged in.
+      400:
+        description: A flash message indicating that no professional is available for the service or the professional is blocked/unapproved.
+    """
     if 'user_id' in session:
         customer_id = session['user_id']
         professional = ProfessionalProfile.query.filter_by(service_type=service_id).first()
@@ -420,6 +810,31 @@ def create_service_request(service_id):
 
 @app.route('/customer/close_service_request/<int:request_id>', methods=['GET', 'POST'])
 def close_service_request(request_id):
+    """
+    Close a service request and provide remarks or rating for the service.
+    ---
+    tags:
+      - Customer
+    parameters:
+      - name: request_id
+        in: path
+        type: integer
+        required: true
+        description: "The ID of the service request to close."
+    responses:
+      200:
+        description: Renders the service remarks page for closing the service request.
+        schema:
+          type: object
+          properties:
+            form:
+              type: object
+              description: The form for providing remarks and rating for the service.
+      302:
+        description: Redirects to the login page if the user is not logged in.
+      201:
+        description: Service request closed successfully.
+    """
     if not session.get('user_id'):
         flash('Please log in to close this request.', 'danger')
         return redirect(url_for('login'))
@@ -445,6 +860,63 @@ def close_service_request(request_id):
 
 @app.route('/professional/profile', methods=['GET', 'POST'])
 def professional_profile():
+    """
+    View and update professional profile information.
+    ---
+    tags:
+      - Professional
+    parameters:
+      - name: user_id
+        in: formData
+        type: integer
+        required: true
+        description: "The ID of the user accessing the profile."
+      - name: full_name
+        in: formData
+        type: string
+        required: true
+        description: "The full name of the professional."
+      - name: service_type
+        in: formData
+        type: string
+        required: true
+        description: "The type of service provided by the professional."
+      - name: experience
+        in: formData
+        type: integer
+        required: true
+        description: "Years of experience in the service industry."
+      - name: address
+        in: formData
+        type: string
+        required: true
+        description: "The address of the professional."
+      - name: pin_code
+        in: formData
+        type: string
+        required: true
+        description: "The pin code for the professional's address."
+      - name: file
+        in: formData
+        type: file
+        required: false
+        description: "An optional profile image or document (image or PDF) to upload."
+    responses:
+      200:
+        description: Renders the professional profile update page.
+        schema:
+          type: object
+          properties:
+            form:
+              type: object
+              description: The form for updating the professional profile.
+      302:
+        description: Redirects to the login page if the user is not logged in.
+      201:
+        description: Profile updated successfully.
+      400:
+        description: Invalid file format or other validation errors.
+    """
     if not session.get('user_id'):
         flash('Please log in to complete your profile.', 'danger')
         return redirect(url_for('login'))
@@ -508,6 +980,41 @@ def professional_profile():
 
 @app.route('/professional/dashboard')
 def professional_dashboard():
+    """
+    Render the professional dashboard with active service requests and services.
+    ---
+    tags:
+      - Professional
+    responses:
+      200:
+        description: Renders the professional dashboard page with active service requests and services.
+        schema:
+          type: object
+          properties:
+            service_requests:
+              type: array
+              items:
+                type: object
+                description: List of active service requests for the professional.
+            services:
+              type: array
+              items:
+                type: object
+                description: List of services related to the professional's requests.
+            cust_dict:
+              type: object
+              description: Dictionary of customer profiles keyed by user ID.
+            service_dict:
+              type: object
+              description: Dictionary of services keyed by service ID.
+            service_requests_closed:
+              type: array
+              items:
+                type: object
+                description: List of closed service requests for the professional.
+      302:
+        description: Redirects to the login page if the user is not logged in.
+    """
     if 'user_id' in session:
         professional_id = session['user_id']
         service_requests = ServiceRequest.query.filter_by(professional_id=professional_id,service_status='requested').all()
@@ -527,6 +1034,48 @@ def professional_dashboard():
 
 @app.route('/professional/search',methods=['GET', 'POST'])
 def professional_search():
+    """
+    Search for service requests as a professional.
+    ---
+    tags:
+      - Professional
+    parameters:
+      - name: search_type
+        in: formData
+        type: string
+        required: true
+        description: "The type of search to perform (date, location, or pin)."
+        enum: ['date', 'location', 'pin']
+      - name: search_text
+        in: formData
+        type: string
+        required: true
+        description: "The search term to filter service requests."
+    responses:
+      200:
+        description: Renders the professional search results page with service requests.
+        schema:
+          type: object
+          properties:
+            form:
+              type: object
+              description: The search form used for filtering.
+            service_requests:
+              type: array
+              items:
+                type: object
+                description: List of service requests matching the search criteria.
+            cust_dict:
+              type: object
+              description: Dictionary of customer profiles keyed by user ID.
+            service_dict:
+              type: object
+              description: Dictionary of services keyed by service ID.
+      302:
+        description: Redirects to the login page if the user is not logged in.
+      404:
+        description: If no results are found for the search query.
+    """
     if not session.get('user_id'):
         flash('Please log in..', 'danger')
         return redirect(url_for('login'))
@@ -557,12 +1106,48 @@ def professional_search():
     
 @app.route('/professional/summary')
 def professional_summary():
+    """
+    Render the professional summary page.
+    ---
+    tags:
+      - Professional
+
+    responses:
+      200:
+        description: Renders the professional summary HTML page.
+      302:
+        description: Redirects to the login page if the user is not logged in.
+    """
     if 'user_id' in session:
         return render_template('professional_summary.html')
     return redirect(url_for('login'))
 
 @app.route('/professional/update_request_status/<string:status>/<int:request_id>')
 def update_request_status(status,request_id):
+    """
+    Update the status of a service request.
+    ---
+    tags:
+      - Professional
+    
+    parameters:
+      - name: status
+        in: path
+        type: string
+        required: true
+        description: "The new status of the service request (accept or reject)"
+        enum: ['accept', 'reject']
+      - name: request_id
+        in: path
+        type: integer
+        required: true
+        description: "ID of the service request to be updated"
+    responses:
+      302:
+        description: Redirects to the professional dashboard if successful, or to the login page if the user is not logged in.
+      404:
+        description: Service request not found.
+    """
     if 'user_id' in session:
         service_request = ServiceRequest.query.get_or_404(request_id)
         if status == 'accept':
@@ -579,36 +1164,154 @@ def update_request_status(status,request_id):
 # Define an API endpoint to return the reviews data
 @app.route('/admin/summary/reviews', methods=['GET'])
 def get_reviews():
+    """
+    Get reviews for all professionals.
+    ---
+    tags:
+      - Admin
+    
+    responses:
+      200:
+        description: A list of professionals and their reviews.
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              full_name:
+                type: string
+              reviews:
+                type: string
+    """
     professionals = ProfessionalProfile.query.with_entities(ProfessionalProfile.full_name,ProfessionalProfile.reviews).all()
     reviews_data = [{"full_name": p.full_name, "reviews": p.reviews} for p in professionals]
     return jsonify(reviews_data)
 
 @app.route('/admin/summary/service_requests', methods=['GET'])
 def get_service_requests():
+    """
+    Get summary of service requests grouped by completion date.
+    ---
+    tags:
+      - Admin
+    
+    responses:
+      200:
+        description: A list of date-wise service request counts.
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              count:
+                type: integer
+    """
     service_requests = (db.session.query(func.date(ServiceRequest.date_of_completion), func.count(ServiceRequest.id)).filter(ServiceRequest.date_of_completion!=None).group_by(func.date(ServiceRequest.date_of_completion)).all())
     datewise_requests =[{"date": str(sr[0]), "count": sr[1]} for sr in service_requests]   
     return jsonify(datewise_requests)
 
 @app.route('/customer/summary/service_requests/<int:customer_id>', methods=['GET'])
 def get_service_requests_customer(customer_id):
+    """
+    Get summary of service requests for a specific customer grouped by completion date.
+    ---
+
+    tags:
+      - Customer
+    
+    parameters:
+      - name: customer_id
+        in: path
+        type: integer
+        required: true
+        description: The ID of the customer
+    responses:
+      200:
+        description: A list of date-wise service request counts for the customer.
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              count:
+                type: integer
+    """
     service_requests_customer = (db.session.query(func.date(ServiceRequest.date_of_completion), func.count(ServiceRequest.id)).filter(ServiceRequest.date_of_completion!=None,ServiceRequest.customer_id==customer_id).group_by(func.date(ServiceRequest.date_of_completion)).all())
     datewise_requests =[{"date": str(sr[0]), "count": sr[1]} for sr in service_requests_customer]   
     return jsonify(datewise_requests)
 
 @app.route('/professional/summary/reviews/<int:professional_id>', methods=['GET'])
 def get_reviews_professional(professional_id):
+    """
+    Get reviews for a specific professional.
+    ---
+    tags:
+        - Professional
+
+    parameters:
+      - name: professional_id
+        in: path
+        type: integer
+        required: true
+        description: The ID of the professional
+    responses:
+      200:
+        description: A list of the professional's reviews.
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              full_name:
+                type: string
+              reviews:
+                type: string
+    """
     professionals = ProfessionalProfile.query.with_entities(ProfessionalProfile.full_name,ProfessionalProfile.reviews).filter(ProfessionalProfile.user_id==professional_id).all()
     reviews_data = [{"full_name": p.full_name, "reviews": p.reviews} for p in professionals]
     return jsonify(reviews_data)
 
 @app.route('/professional/summary/service_requests/<int:professional_id>', methods=['GET'])
 def get_service_requests_professional(professional_id):
+    """
+    Get summary of service requests for a specific professional grouped by completion date.
+    ---
+    tags:
+        - Professional
+    
+    parameters:
+      - name: professional_id
+        in: path
+        type: integer
+        required: true
+        description: The ID of the professional
+    responses:
+      200:
+        description: A list of date-wise service request counts for the professional.
+        schema:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              count:
+                type: integer
+    """
     service_requests = (db.session.query(func.date(ServiceRequest.date_of_completion), func.count(ServiceRequest.id)).join(ProfessionalProfile,ServiceRequest.professional_id==ProfessionalProfile.user_id).filter(ServiceRequest.date_of_completion!=None,ProfessionalProfile.user_id==professional_id).group_by(func.date(ServiceRequest.date_of_completion)).all())
     datewise_requests =[{"date": str(sr[0]), "count": sr[1]} for sr in service_requests]   
     return jsonify(datewise_requests)
 
 
 CORS(app)
+swagger = Swagger(app)
 
 if __name__ == '__main__':
     app.run(debug=True)
