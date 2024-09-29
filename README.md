@@ -34,3 +34,6 @@ The Household Services App is designed to connect customers with professional se
    - pip install -r requirements.txt
 5. Run the application
    - flask run
+
+## Usage
+ - video presentation link: docs/presentation.mkv
