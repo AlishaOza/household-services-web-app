@@ -6,8 +6,6 @@
 - [Technologies Used](#technologies-used)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Introduction
 The Household Services App is designed to connect customers with professional service providers. Users can create service requests, and professionals can manage and respond to these requests. This app aims to streamline the process of finding and offering household services.
