@@ -31,8 +31,9 @@ The Household Services App is designed to connect customers with professional se
    cd household_services_app
 2. Create a virtual environment:
    python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-3. Install the required packages:
+   source venv/bin/activate
+   # On Windows use `venv\Scripts\activate`
+4. Install the required packages:
    pip install -r requirements.txt
-4. Run the application
+5. Run the application
    flask run
