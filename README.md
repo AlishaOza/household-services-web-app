@@ -28,7 +28,7 @@ The Household Services App is designed to connect customers with professional se
    - git clone https://github.com/jaiswalvik/household_services_app.git
    - cd household_services_app
 2. Create a virtual environment:
-   - python -m venv venv
+   - python -m venv env
    - source venv/bin/activate (On Windows use `venv\Scripts\activate`)
 4. Install the required packages:
    - pip install -r requirements.txt
