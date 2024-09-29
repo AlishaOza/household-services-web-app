@@ -36,4 +36,4 @@ The Household Services App is designed to connect customers with professional se
    - flask run
 
 ## Usage
- - video presentation link: [Project Presenatation](<https://drive.google.com/file/d/1iW0_ZA0qrEmAAvfudgKp77NKzaiqKk_4/view?usp=sharing>)
+ - video presentation link: [Project Presentation](<https://drive.google.com/file/d/1iW0_ZA0qrEmAAvfudgKp77NKzaiqKk_4/view?usp=sharing>)
