@@ -9,7 +9,7 @@ import re
 class RegisterForm(FlaskForm):
     username = StringField('Username', validators=[InputRequired(), Length(min=4, max=15)])
     password = PasswordField('Password', validators=[InputRequired(), Length(min=5, max=80)])
-    role = SelectField('Role', choices=[('customer', 'Customer'), ('professional', 'Service Professional'), ('admin', 'Admin')])
+    role = SelectField('Role', choices=[('customer', 'Customer'), ('professional', 'Service Professional')])
     submit = SubmitField('Register')
 
 class LoginForm(FlaskForm):
