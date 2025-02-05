@@ -25,7 +25,7 @@ The Household Services App is designed to connect customers with professional se
 
 ## Installation
 1. Clone the repository:
-   - git clone https://github.com/jaiswalvik/household_services_app.git
+   - git clone https://github.com/AlishaOza/household-services-web-app.git
    - cd household_services_app
 2. Create a virtual environment:
    - python -m venv env
@@ -35,5 +35,4 @@ The Household Services App is designed to connect customers with professional se
 5. Run the application
    - flask run
 
-## Usage
- - video presentation link: [Project Presentation](<https://drive.google.com/file/d/1iW0_ZA0qrEmAAvfudgKp77NKzaiqKk_4/view?usp=sharing>)
+
